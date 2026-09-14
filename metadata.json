@@ -1,0 +1,6 @@
+{
+  "name": "Farhan Tasneem Portfolio",
+  "description": "Full-stack personal portfolio and admin management suite for Farhan Tasneem, CSE student, developer, and creative.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
