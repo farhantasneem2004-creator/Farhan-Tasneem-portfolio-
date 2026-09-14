@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Mail, MapPin, Send, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Mail, MapPin, Phone, Send, CheckCircle2, AlertCircle } from 'lucide-react';
 import type { SiteSettings, SocialLink } from '../../types.js';
 import { DynamicIcon } from '../common/IconHelper.js';
 import { api } from '../../api.js';
@@ -92,6 +92,23 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                       className="text-sm font-medium text-[#e5e7eb] hover:text-white transition-colors"
                     >
                       farhantasneem2004@gmail.com
+                    </a>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 p-3.5 rounded-xl bg-[#12151b] border border-[#1f2533]">
+                  <div className="p-2 rounded-lg bg-[#181c25] text-amber-400" style={{ color: accent }}>
+                    <Phone className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <span className="text-[11px] uppercase tracking-wider text-[#6b7280] block font-medium">
+                      Phone / Mobile
+                    </span>
+                    <a
+                      href="tel:+8801540345406"
+                      className="text-sm font-medium text-[#e5e7eb] hover:text-white transition-colors"
+                    >
+                      +8801540345406
                     </a>
                   </div>
                 </div>

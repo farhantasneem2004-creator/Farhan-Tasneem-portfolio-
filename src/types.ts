@@ -18,13 +18,17 @@ export interface SiteSettings {
   seoTitle: string;
   seoDescription: string;
   faviconUrl?: string;
+  phone?: string;
+  email?: string;
   aboutPhoto: string;
   aboutHeading: string;
   aboutShortBio: string;
   aboutDetailedBio: string;
+  aboutCareerObjective?: string;
   aboutLocation: string;
   aboutCurrentFocus: string;
   aboutInterests: string;
+  aboutLanguages?: string;
   sectionVisibility: {
     about: boolean;
     skills: boolean;
@@ -37,6 +41,17 @@ export interface SiteSettings {
     contact: boolean;
   };
   highlights: HighlightItem[];
+  references?: Reference[];
+}
+
+export interface Reference {
+  id: string;
+  name: string;
+  role: string;
+  institution: string;
+  email: string;
+  phone?: string;
+  order: number;
 }
 
 export interface HighlightItem {

@@ -1,0 +1,935 @@
+{
+  "admin": {
+    "email": "farhantasneem2004@gmail.com",
+    "passwordHash": "$2b$10$hQPoYbdkJhNjU7AQxU/FauhMmqEvMOC4sXAwU1shrBWN7LSIQnrBO"
+  },
+  "settings": {
+    "websiteTitle": "Farhan Tasneem | CSE Student • AI & Software Developer",
+    "heroHeadingFirst": "FARHAN",
+    "heroHeadingAccent": "TASNEEM",
+    "heroSubtitle": "Computer Science & Engineering Student",
+    "heroDescription": "Motivated Computer Science and Engineering student at Daffodil International University with a strong academic background, passion for artificial intelligence, prompt engineering, and software development.",
+    "heroImage": "/uploads/46871_1789384437433.png",
+    "heroImageCrop": "cover",
+    "heroImagePosition": "center",
+    "heroImageStyle": "editorial",
+    "heroBgElement": true,
+    "heroBgShape": "frame_accent",
+    "heroBadgeText": "Build • Learn • Create",
+    "heroEyebrow": "Hello, I'm",
+    "accentColor": "#e5a93c",
+    "publicCvDownload": true,
+    "customCvPdfUrl": "",
+    "seoTitle": "Farhan Tasneem | CSE Student • Developer • Creative",
+    "seoDescription": "Personal portfolio and creative case studies of Farhan Tasneem, a CSE student, developer, and creative.",
+    "aboutPhoto": "/src/assets/images/workspace_editorial_1789381777509.jpg",
+    "aboutHeading": "Motivated CSE student passionate about technology, AI, and continuous learning.",
+    "aboutShortBio": "Motivated Computer Science and Engineering student with a strong academic background and a growing interest in emerging technologies such as artificial intelligence, data science, and software development. Skilled in programming, problem-solving, and project collaboration, with demonstrated leadership and communication abilities.",
+    "aboutDetailedBio": "Eager to contribute to a dynamic tech-driven environment while exploring and expanding my professional interests within the field of computer science.\\n\\nCareer Objective: Motivated and detail-oriented Computer Science student with a strong passion for technology, problem-solving, and continuous learning. Eager to apply technical skills and creativity to real-world challenges while growing as a future software developer or IT professional.",
+    "aboutLocation": "Dhaka, Bangladesh",
+    "aboutCurrentFocus": "Artificial Intelligence, Prompt Engineering, Data Science & Software Development",
+    "aboutInterests": "Watching movies, Reading books, Programming, Artificial Intelligence, Creative Writing, Technical Illustration",
+    "sectionVisibility": {
+      "about": true,
+      "skills": true,
+      "projects": true,
+      "experience": false,
+      "education": true,
+      "certifications": true,
+      "services": true,
+      "gallery": true,
+      "contact": true
+    },
+    "highlights": [
+      {
+        "id": "h1",
+        "icon": "GraduationCap",
+        "label": "CSE Student @ DIU",
+        "order": 1
+      },
+      {
+        "id": "h2",
+        "icon": "Sparkles",
+        "label": "AI Prompt Engineering",
+        "order": 2
+      },
+      {
+        "id": "h3",
+        "icon": "Code2",
+        "label": "Software Development",
+        "order": 3
+      },
+      {
+        "id": "h4",
+        "icon": "Lightbulb",
+        "label": "Problem Solver",
+        "order": 4
+      }
+    ],
+    "phone": "+8801540345406",
+    "email": "farhantasneem2004@gmail.com",
+    "aboutCareerObjective": "Motivated and detail-oriented Computer Science student with a strong passion for technology, problem-solving, and continuous learning. Eager to apply technical skills and creativity to real-world challenges while growing as a future software developer or IT professional.",
+    "aboutLanguages": "Bangla (Native), English (Fluent), Hindi (Basic – Verbal only)",
+    "references": [
+      {
+        "id": "ref1",
+        "name": "Mr. S. M. Sharif Hasan",
+        "role": "Lecturer",
+        "institution": "Daffodil International University",
+        "email": "smsharifhasan.cse@diu.edu.bd",
+        "phone": "01674102030",
+        "order": 1
+      },
+      {
+        "id": "ref2",
+        "name": "Morad Hossain",
+        "role": "Lecturer",
+        "institution": "BAF Shaheen College, Shamshernagar",
+        "email": "moradju@gmail.com",
+        "phone": "01712036236",
+        "order": 2
+      }
+    ]
+  },
+  "socialLinks": [
+    {
+      "id": "s1",
+      "platform": "GitHub",
+      "label": "GitHub",
+      "url": "https://github.com",
+      "order": 1,
+      "visible": true
+    },
+    {
+      "id": "s2",
+      "platform": "LinkedIn",
+      "label": "LinkedIn",
+      "url": "https://linkedin.com",
+      "order": 2,
+      "visible": true
+    },
+    {
+      "id": "s3",
+      "platform": "Fiverr",
+      "label": "Fiverr",
+      "url": "https://fiverr.com",
+      "order": 3,
+      "visible": true
+    },
+    {
+      "id": "s4",
+      "platform": "Facebook",
+      "label": "Facebook",
+      "url": "https://facebook.com",
+      "order": 4,
+      "visible": true
+    },
+    {
+      "id": "s5",
+      "platform": "Instagram",
+      "label": "Instagram",
+      "url": "https://instagram.com",
+      "order": 5,
+      "visible": true
+    },
+    {
+      "id": "s6",
+      "platform": "YouTube",
+      "label": "YouTube",
+      "url": "https://youtube.com",
+      "order": 6,
+      "visible": true
+    },
+    {
+      "id": "s7",
+      "platform": "X",
+      "label": "X (Twitter)",
+      "url": "https://x.com",
+      "order": 7,
+      "visible": true
+    }
+  ],
+  "skills": [
+    {
+      "id": "sk-prompt",
+      "name": "Prompt Engineering with AI tools",
+      "category": "Artificial Intelligence",
+      "description": "Generative AI workflows, context framing, system instructions, and LLM optimization",
+      "level": "Advanced",
+      "percentage": 92,
+      "order": 1,
+      "visible": true
+    },
+    {
+      "id": "sk-ai-concepts",
+      "name": "Understanding of AI Concepts",
+      "category": "Artificial Intelligence",
+      "description": "Foundation models, neural approaches, data science fundamentals, and ethical AI",
+      "level": "Proficient",
+      "percentage": 85,
+      "order": 2,
+      "visible": true
+    },
+    {
+      "id": "sk-prog",
+      "name": "Programming & Web Development",
+      "category": "Computer Science",
+      "description": "Core programming logic, algorithmic structuring, and modern web applications",
+      "level": "Proficient",
+      "percentage": 86,
+      "order": 3,
+      "visible": true
+    },
+    {
+      "id": "sk-dsa",
+      "name": "Data Structures & Problem-Solving",
+      "category": "Computer Science",
+      "description": "Algorithmic efficiency, data organization, and analytical debugging mindset",
+      "level": "Proficient",
+      "percentage": 84,
+      "order": 4,
+      "visible": true
+    },
+    {
+      "id": "sk-office",
+      "name": "MS Word & PowerPoint",
+      "category": "Productivity & Tools",
+      "description": "Professional technical documentation, executive slide presentations, and academic reporting",
+      "level": "Advanced",
+      "percentage": 92,
+      "order": 5,
+      "visible": true
+    },
+    {
+      "id": "sk-teamwork",
+      "name": "Teamwork & Communication",
+      "category": "Soft Skills",
+      "description": "Effective cross-functional collaboration, active listening, and presentation skills",
+      "level": "Advanced",
+      "percentage": 90,
+      "order": 6,
+      "visible": true
+    },
+    {
+      "id": "sk-mindset",
+      "name": "Problem-Solving Mindset",
+      "category": "Soft Skills",
+      "description": "Structured analytical thinking, resilience when facing challenging bugs, and logical reasoning",
+      "level": "Advanced",
+      "percentage": 90,
+      "order": 7,
+      "visible": true
+    },
+    {
+      "id": "sk-adapt",
+      "name": "Willingness to Learn & Adapt",
+      "category": "Soft Skills",
+      "description": "High agility in mastering emerging technologies, new frameworks, and collaborative tools",
+      "level": "Expert",
+      "percentage": 95,
+      "order": 8,
+      "visible": true
+    }
+  ],
+  "projects": [
+    {
+      "id": "p1",
+      "name": "eFuture Cup Manager",
+      "shortDescription": "A tournament management web application for creating and managing tournaments, participants, matches, tables and brackets.",
+      "detailedDescription": "eFuture Cup Manager is an end-to-end tournament operations and bracket orchestration web platform. Designed to eliminate manual administrative overhead, it provides automated knockout bracket seeding, round-robin table calculations, scheduled fixture generation, real-time match outcome recording, and participant profile rosters.",
+      "mainImage": "/src/assets/images/efuture_cup_project_1789381795595.jpg",
+      "additionalImages": [],
+      "technologies": [
+        "React",
+        "TypeScript",
+        "Node.js",
+        "PostgreSQL",
+        "Tailwind CSS"
+      ],
+      "category": "Web Application",
+      "githubUrl": "https://github.com/farhantasneem/efuture-cup-manager",
+      "liveDemoUrl": "https://efuturecup.example.com",
+      "date": "2024 - Present",
+      "featured": true,
+      "displayOrder": 1,
+      "visible": true
+    },
+    {
+      "id": "p-academic",
+      "name": "Academic Research & Group Presentations",
+      "shortDescription": "Collaborative university presentations and research initiatives spanning emerging technologies and computer science.",
+      "detailedDescription": "Participated in class group projects and presentations involving research, teamwork, and communication. Focused on evaluating computer science concepts, structured presentation slides, and collaborative software investigation.",
+      "mainImage": "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1200&q=80",
+      "additionalImages": [],
+      "technologies": [
+        "Research",
+        "MS PowerPoint",
+        "Teamwork",
+        "Communication",
+        "Technical Analysis"
+      ],
+      "category": "Academic Project",
+      "date": "2025",
+      "featured": true,
+      "displayOrder": 2,
+      "visible": true
+    }
+  ],
+  "experiences": [],
+  "education": [
+    {
+      "id": "edu-diu",
+      "institution": "Daffodil International University",
+      "degree": "Bachelor of Science in Computer Science and Engineering",
+      "department": "Department of Computer Science and Engineering",
+      "startYear": "2025",
+      "endYear": "Present",
+      "current": true,
+      "grade": "Currently Enrolled",
+      "description": "Undergraduate studies in Computer Science and Engineering. Academic coursework emphasizing Artificial Intelligence, Data Science, Software Development, Data Structures, Algorithms, and collaborative technical projects.",
+      "order": 1,
+      "visible": true
+    },
+    {
+      "id": "edu-hsc",
+      "institution": "BAF Shaheen College Shamshernagar",
+      "degree": "Higher Secondary Certificate (HSC)",
+      "department": "Science Division",
+      "startYear": "2022",
+      "endYear": "2023",
+      "current": false,
+      "grade": "GPA 5.00 / 5.00",
+      "description": "Graduated with highest academic distinction (GPA 5.00) in Science division. Advanced coursework in Higher Mathematics, Physics, Chemistry, and Information & Communication Technology.",
+      "order": 2,
+      "visible": true
+    },
+    {
+      "id": "edu-ssc",
+      "institution": "Bishaw Zakir Monzil Govt. High School",
+      "degree": "Secondary School Certificate (SSC)",
+      "department": "Science Division",
+      "startYear": "2020",
+      "endYear": "2021",
+      "current": false,
+      "grade": "GPA 5.00 / 5.00",
+      "description": "Completed Secondary School Certificate with a perfect score (GPA 5.00). Fundamental studies in General Science, Mathematics, and Computer Studies.",
+      "order": 3,
+      "visible": true
+    }
+  ],
+  "certifications": [
+    {
+      "id": "cert-ai-prompt",
+      "name": "AI Prompt Engineering Course",
+      "issuer": "NetCom Learning – in collaboration with Microsoft",
+      "date": "2024 - 2025",
+      "credentialId": "NETCOM-MSFT-AIPE",
+      "description": "Specialized training covering Generative AI fundamentals, context-aware prompt architecture, iterative refinement, system instructions, and modern productivity tooling with Microsoft.",
+      "order": 1,
+      "visible": true
+    }
+  ],
+  "services": [
+    {
+      "id": "srv1",
+      "name": "Custom Poetry",
+      "shortDescription": "Evocative, tailored poetic compositions crafted for meaningful occasions and conceptual projects.",
+      "detailedDescription": "Original written poetry shaped by rhythm, tone, and bespoke themes. Suitable for personal tributes, artistic books, creative collaborations, and reflective publications.",
+      "icon": "Feather",
+      "ctaText": "Commission a Poem",
+      "order": 1,
+      "visible": true
+    },
+    {
+      "id": "srv2",
+      "name": "Technical / Machinery Illustration",
+      "shortDescription": "Precise isometric, vector line-art, and diagrammatic visuals of mechanical assemblies and hardware.",
+      "detailedDescription": "Detailed visual diagrams that make complex engineering concepts, machinery parts, and technical architectures clear, aesthetically refined, and accessible.",
+      "icon": "Compass",
+      "ctaText": "Request Illustration",
+      "order": 2,
+      "visible": true
+    },
+    {
+      "id": "srv3",
+      "name": "Short Script Writing",
+      "shortDescription": "Character-driven dialogue and structured narrative storytelling for visual media and short films.",
+      "detailedDescription": "Writing compelling short screenplay concepts, visual outlines, and dialogues designed for cinematic shorts, voiceovers, and thematic storytelling.",
+      "icon": "FileText",
+      "ctaText": "Discuss a Script",
+      "order": 3,
+      "visible": true
+    }
+  ],
+  "galleryCategories": [
+    {
+      "id": "cat-univ",
+      "name": "University",
+      "order": 1,
+      "visible": true
+    },
+    {
+      "id": "cat-comp",
+      "name": "Competitions",
+      "order": 2,
+      "visible": true
+    },
+    {
+      "id": "cat-proj",
+      "name": "Projects",
+      "order": 3,
+      "visible": true
+    },
+    {
+      "id": "cat-travel",
+      "name": "Travel",
+      "order": 4,
+      "visible": true
+    },
+    {
+      "id": "cat-photo",
+      "name": "Photography",
+      "order": 5,
+      "visible": true
+    },
+    {
+      "id": "cat-events",
+      "name": "Events",
+      "order": 6,
+      "visible": true
+    },
+    {
+      "id": "cat-pers",
+      "name": "Personal",
+      "order": 7,
+      "visible": true
+    }
+  ],
+  "galleryAlbums": [
+    {
+      "id": "alb-dhaka",
+      "title": "Dhaka Trip",
+      "description": "Streets, architectural textures, and urban atmospheres captured across the city.",
+      "coverImage": "https://images.unsplash.com/photo-1578575437130-527eed3abbec?auto=format&fit=crop&w=1200&q=80",
+      "date": "2024",
+      "location": "Dhaka",
+      "categoryId": "cat-travel",
+      "order": 1,
+      "visible": true
+    },
+    {
+      "id": "alb-comp",
+      "title": "University Competition",
+      "description": "Coding hackathons, collaborative team sessions, and problem solving events.",
+      "coverImage": "https://images.unsplash.com/photo-1515187029135-18ee286d815b?auto=format&fit=crop&w=1200&q=80",
+      "date": "2024",
+      "location": "Campus Tech Hall",
+      "categoryId": "cat-comp",
+      "order": 2,
+      "visible": true
+    },
+    {
+      "id": "alb-travel26",
+      "title": "Travel 2026",
+      "description": "Landscape and natural horizon studies across serene rural and coastal routes.",
+      "coverImage": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80",
+      "date": "2026",
+      "location": "Bengal Coast",
+      "categoryId": "cat-travel",
+      "order": 3,
+      "visible": true
+    },
+    {
+      "id": "alb-proj",
+      "title": "Project Exhibition",
+      "description": "Showcasing engineering builds, interface designs, and interactive student displays.",
+      "coverImage": "https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=1200&q=80",
+      "date": "2024",
+      "location": "Auditorium",
+      "categoryId": "cat-proj",
+      "order": 4,
+      "visible": true
+    }
+  ],
+  "galleryImages": [
+    {
+      "id": "g-ws",
+      "title": "Studio Workspace & Code Sessions",
+      "caption": "Quiet morning focus with fresh code and coffee.",
+      "url": "/src/assets/images/workspace_editorial_1789381777509.jpg",
+      "categoryId": "cat-photo",
+      "albumId": "alb-proj",
+      "aspectRatio": "landscape",
+      "date": "2024",
+      "location": "Desk Studio",
+      "order": 1,
+      "visible": true
+    },
+    {
+      "id": "g-1",
+      "title": "Algorithmic Workshop",
+      "caption": "Whiteboarding logic diagrams during intensive competition prep.",
+      "url": "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=1200&q=80",
+      "categoryId": "cat-comp",
+      "albumId": "alb-comp",
+      "aspectRatio": "landscape",
+      "date": "2024",
+      "location": "University Lab",
+      "order": 2,
+      "visible": true
+    },
+    {
+      "id": "g-2",
+      "title": "Historic Brick Archways",
+      "caption": "Architectural perspectives framing morning sunlight.",
+      "url": "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=1200&q=80",
+      "categoryId": "cat-travel",
+      "albumId": "alb-dhaka",
+      "aspectRatio": "portrait",
+      "date": "2024",
+      "location": "Old Dhaka",
+      "order": 3,
+      "visible": true
+    },
+    {
+      "id": "g-3",
+      "title": "Technical Schematics Review",
+      "caption": "Inspecting isometric machinery drawings and line-art drafts.",
+      "url": "https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?auto=format&fit=crop&w=1200&q=80",
+      "categoryId": "cat-proj",
+      "albumId": "alb-proj",
+      "aspectRatio": "landscape",
+      "date": "2024",
+      "location": "Design Studio",
+      "order": 4,
+      "visible": true
+    },
+    {
+      "id": "g-4",
+      "title": "Riverfront Sunset Geometry",
+      "caption": "Long shadows across the water during golden hour.",
+      "url": "https://images.unsplash.com/photo-1495616811223-4d98c6e9c869?auto=format&fit=crop&w=1200&q=80",
+      "categoryId": "cat-travel",
+      "albumId": "alb-travel26",
+      "aspectRatio": "landscape",
+      "date": "2026",
+      "location": "Riverbank",
+      "order": 5,
+      "visible": true
+    },
+    {
+      "id": "g-5",
+      "title": "Campus Quadrangle in Spring",
+      "caption": "Greenery against university red brick walls between lectures.",
+      "url": "https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=1200&q=80",
+      "categoryId": "cat-univ",
+      "albumId": "alb-comp",
+      "aspectRatio": "portrait",
+      "date": "2024",
+      "location": "University Campus",
+      "order": 6,
+      "visible": true
+    }
+  ],
+  "contactMessages": [],
+  "cvVersions": [
+    {
+      "id": "cv-general",
+      "title": "General CV",
+      "template": "modern",
+      "length": "two-page",
+      "sections": {
+        "profilePicture": true,
+        "about": true,
+        "contact": true,
+        "skills": true,
+        "projects": true,
+        "experience": true,
+        "education": true,
+        "certifications": true,
+        "services": true,
+        "socialLinks": true
+      },
+      "sectionOrder": [
+        "about",
+        "education",
+        "skills",
+        "projects",
+        "services",
+        "contact"
+      ],
+      "customTitle": "Farhan Tasneem — Curriculum Vitae",
+      "customSummary": "CSE Student and developer with solid foundations in algorithmic problem solving, web technologies, and creative visualization.",
+      "isDefault": true
+    },
+    {
+      "id": "cv-software",
+      "title": "Software Development CV",
+      "template": "classic",
+      "length": "one-page",
+      "sections": {
+        "profilePicture": false,
+        "about": true,
+        "contact": true,
+        "skills": true,
+        "projects": true,
+        "experience": true,
+        "education": true,
+        "certifications": true,
+        "services": false,
+        "socialLinks": true
+      },
+      "sectionOrder": [
+        "skills",
+        "projects",
+        "education",
+        "contact"
+      ],
+      "customTitle": "Farhan Tasneem — Software Development CV",
+      "customSummary": "Computer Science and Engineering student specializing in full-stack web applications, TypeScript, C++, and competitive algorithms."
+    },
+    {
+      "id": "cv-freelance",
+      "title": "Freelance CV",
+      "template": "modern",
+      "length": "one-page",
+      "sections": {
+        "profilePicture": true,
+        "about": true,
+        "contact": true,
+        "skills": true,
+        "projects": true,
+        "experience": false,
+        "education": true,
+        "certifications": false,
+        "services": true,
+        "socialLinks": true
+      },
+      "sectionOrder": [
+        "services",
+        "projects",
+        "skills",
+        "contact"
+      ],
+      "customTitle": "Farhan Tasneem — Freelance & Creative Services",
+      "customSummary": "Bespoke web development, technical illustration, and scriptwriting tailored for clients seeking precise, high-craft deliverables."
+    },
+    {
+      "id": "cv-academic",
+      "title": "Academic CV",
+      "template": "compact",
+      "length": "two-page",
+      "sections": {
+        "profilePicture": false,
+        "about": true,
+        "contact": true,
+        "skills": true,
+        "projects": true,
+        "experience": false,
+        "education": true,
+        "certifications": true,
+        "services": false,
+        "socialLinks": true
+      },
+      "sectionOrder": [
+        "education",
+        "skills",
+        "projects",
+        "about",
+        "contact"
+      ],
+      "customTitle": "Farhan Tasneem — Academic Profile",
+      "customSummary": "Undergraduate CSE researcher with coursework focus in discrete mathematics, algorithms, and distributed systems."
+    },
+    {
+      "title": "Software Engineering CV",
+      "template": "modern",
+      "length": "one-page",
+      "sections": {
+        "profilePicture": false,
+        "about": true,
+        "contact": true,
+        "skills": true,
+        "projects": true,
+        "experience": false,
+        "education": true,
+        "certifications": false,
+        "services": false,
+        "socialLinks": true
+      },
+      "sectionOrder": [
+        "about",
+        "skills",
+        "projects",
+        "experience",
+        "education",
+        "certifications",
+        "services"
+      ],
+      "customTitle": "CSE Student • Developer • Creative",
+      "isDefault": false,
+      "id": "cv_1789384489341"
+    },
+    {
+      "title": "Software Engineering CV",
+      "template": "modern",
+      "length": "one-page",
+      "sections": {
+        "profilePicture": false,
+        "about": true,
+        "contact": true,
+        "skills": true,
+        "projects": true,
+        "experience": false,
+        "education": true,
+        "certifications": false,
+        "services": false,
+        "socialLinks": true
+      },
+      "sectionOrder": [
+        "about",
+        "skills",
+        "projects",
+        "experience",
+        "education",
+        "certifications",
+        "services"
+      ],
+      "customTitle": "CSE Student • Developer • Creative",
+      "isDefault": false,
+      "id": "cv_1789384490845"
+    },
+    {
+      "title": "Software Engineering CV",
+      "template": "modern",
+      "length": "one-page",
+      "sections": {
+        "profilePicture": false,
+        "about": true,
+        "contact": true,
+        "skills": true,
+        "projects": true,
+        "experience": false,
+        "education": true,
+        "certifications": false,
+        "services": false,
+        "socialLinks": true
+      },
+      "sectionOrder": [
+        "about",
+        "skills",
+        "projects",
+        "experience",
+        "education",
+        "certifications",
+        "services"
+      ],
+      "customTitle": "CSE Student • Developer • Creative",
+      "isDefault": false,
+      "id": "cv_1789384491688"
+    },
+    {
+      "title": "Academic & Research Focus",
+      "template": "compact",
+      "length": "extended",
+      "sections": {
+        "profilePicture": false,
+        "about": true,
+        "contact": true,
+        "skills": true,
+        "projects": true,
+        "experience": true,
+        "education": true,
+        "certifications": true,
+        "services": true,
+        "socialLinks": true
+      },
+      "sectionOrder": [
+        "about",
+        "skills",
+        "projects",
+        "experience",
+        "education",
+        "certifications",
+        "services"
+      ],
+      "customTitle": "CSE Student • Developer • Creative",
+      "isDefault": false,
+      "id": "cv_1789384547866"
+    },
+    {
+      "title": "Academic & Research Focus",
+      "template": "compact",
+      "length": "extended",
+      "sections": {
+        "profilePicture": false,
+        "about": true,
+        "contact": true,
+        "skills": true,
+        "projects": true,
+        "experience": true,
+        "education": true,
+        "certifications": true,
+        "services": true,
+        "socialLinks": true
+      },
+      "sectionOrder": [
+        "about",
+        "skills",
+        "projects",
+        "experience",
+        "education",
+        "certifications",
+        "services"
+      ],
+      "customTitle": "CSE Student • Developer • Creative",
+      "isDefault": false,
+      "id": "cv_1789384548853"
+    },
+    {
+      "title": "Academic & Research Focus",
+      "template": "compact",
+      "length": "extended",
+      "sections": {
+        "profilePicture": false,
+        "about": true,
+        "contact": true,
+        "skills": true,
+        "projects": true,
+        "experience": true,
+        "education": true,
+        "certifications": true,
+        "services": true,
+        "socialLinks": true
+      },
+      "sectionOrder": [
+        "about",
+        "skills",
+        "projects",
+        "experience",
+        "education",
+        "certifications",
+        "services"
+      ],
+      "customTitle": "CSE Student • Developer • Creative",
+      "isDefault": false,
+      "id": "cv_1789384549581"
+    },
+    {
+      "title": "Academic & Research Focus",
+      "template": "compact",
+      "length": "extended",
+      "sections": {
+        "profilePicture": false,
+        "about": true,
+        "contact": true,
+        "skills": true,
+        "projects": true,
+        "experience": true,
+        "education": true,
+        "certifications": true,
+        "services": true,
+        "socialLinks": true
+      },
+      "sectionOrder": [
+        "about",
+        "skills",
+        "projects",
+        "experience",
+        "education",
+        "certifications",
+        "services"
+      ],
+      "customTitle": "CSE Student • Developer • Creative",
+      "isDefault": false,
+      "id": "cv_1789384566022"
+    },
+    {
+      "title": "Academic & Research Focus",
+      "template": "classic",
+      "length": "two-page",
+      "sections": {
+        "profilePicture": false,
+        "about": true,
+        "contact": true,
+        "skills": true,
+        "projects": true,
+        "experience": true,
+        "education": true,
+        "certifications": true,
+        "services": false,
+        "socialLinks": true
+      },
+      "sectionOrder": [
+        "about",
+        "skills",
+        "projects",
+        "experience",
+        "education",
+        "certifications",
+        "services"
+      ],
+      "customTitle": "CSE Student • Developer • Creative",
+      "isDefault": false,
+      "id": "cv_1789385058268"
+    },
+    {
+      "title": "Academic & Research Focus",
+      "template": "classic",
+      "length": "two-page",
+      "sections": {
+        "profilePicture": false,
+        "about": true,
+        "contact": true,
+        "skills": true,
+        "projects": true,
+        "experience": true,
+        "education": true,
+        "certifications": true,
+        "services": false,
+        "socialLinks": true
+      },
+      "sectionOrder": [
+        "about",
+        "skills",
+        "projects",
+        "experience",
+        "education",
+        "certifications",
+        "services"
+      ],
+      "customTitle": "CSE Student • Developer • Creative",
+      "isDefault": false,
+      "id": "cv_1789385058431"
+    },
+    {
+      "title": "Academic & Research Focus",
+      "template": "classic",
+      "length": "two-page",
+      "sections": {
+        "profilePicture": false,
+        "about": true,
+        "contact": true,
+        "skills": true,
+        "projects": true,
+        "experience": true,
+        "education": true,
+        "certifications": true,
+        "services": false,
+        "socialLinks": true
+      },
+      "sectionOrder": [
+        "about",
+        "skills",
+        "projects",
+        "experience",
+        "education",
+        "certifications",
+        "services"
+      ],
+      "customTitle": "CSE Student • Developer • Creative",
+      "isDefault": false,
+      "id": "cv_1789385058886"
+    }
+  ]
+}

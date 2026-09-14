@@ -432,7 +432,10 @@ export const AdminCVBuilder: React.FC<AdminCVBuilderProps> = ({
                           {edu.startYear} – {edu.current ? 'Present' : edu.endYear}
                         </span>
                       </div>
-                      <div className="text-[11.5px] text-[#475569] italic">{edu.degree}</div>
+                      <div className="text-[11.5px] text-[#475569] italic flex justify-between">
+                        <span>{edu.degree}</span>
+                        {edu.grade && <span className="font-semibold text-emerald-700 not-italic font-mono text-[10.5px]">{edu.grade}</span>}
+                      </div>
                       {edu.description && (
                         <p className="text-[11px] text-[#64748b] mt-0.5">{edu.description}</p>
                       )}

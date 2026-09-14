@@ -173,7 +173,12 @@ export default function App() {
     if (!isAuthenticated) {
       return (
         <AdminLogin
+          onLoginSuccess={handleLoginSuccess}
           onSuccess={handleLoginSuccess}
+          onBackToPublic={() => {
+            setView('public');
+            window.location.hash = '';
+          }}
           onBackToSite={() => {
             setView('public');
             window.location.hash = '';
@@ -337,7 +342,15 @@ export default function App() {
       {/* Top Navigation */}
       <Navbar
         settings={settings}
-        onDownloadCV={handleDownloadCV}
+        hasExperience={(experiences?.length || 0) > 0}
+        hasEducation={(education?.length || 0) > 0}
+        hasCertifications={(certifications?.length || 0) > 0}
+        onDownloadCv={handleDownloadCV}
+        onOpenAdmin={() => {
+          setView('admin');
+          window.location.hash = 'admin';
+        }}
+        isAdminLoggedIn={isAuthenticated}
         accentColor={accentColor}
       />
 
@@ -381,6 +394,7 @@ export default function App() {
         {sectionVisibility.education && (
           <EducationSection
             education={education}
+            references={settings.references}
             accentColor={accentColor}
           />
         )}

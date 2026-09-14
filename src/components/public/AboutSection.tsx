@@ -66,9 +66,21 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ settings, onDownload
               {settings.aboutShortBio}
             </p>
             {settings.aboutDetailedBio && (
-              <p className="text-sm sm:text-base text-[#9ca3af] font-normal leading-relaxed mb-8">
+              <p className="text-sm sm:text-base text-[#9ca3af] font-normal leading-relaxed mb-6 whitespace-pre-line">
                 {settings.aboutDetailedBio}
               </p>
+            )}
+
+            {/* Career Objective Callout */}
+            {settings.aboutCareerObjective && (
+              <div className="p-4 rounded-xl bg-[#141822] border-l-2 mb-8 border-[#e5a93c]" style={{ borderColor: accent }}>
+                <span className="text-[11px] font-bold uppercase tracking-wider text-amber-400 block mb-1" style={{ color: accent }}>
+                  Career Objective
+                </span>
+                <p className="text-xs sm:text-sm text-[#cbd5e1] leading-relaxed italic">
+                  "{settings.aboutCareerObjective}"
+                </p>
+              </div>
             )}
 
             {/* Subtle Information Blocks */}
@@ -106,12 +118,31 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ settings, onDownload
               )}
             </div>
 
-            {/* Interests Tag List */}
+            {/* Languages & Communication */}
+            {settings?.aboutLanguages && (
+              <div className="mb-6">
+                <span className="text-xs uppercase tracking-wider text-[#6b7280] block mb-2.5 font-medium">
+                  Languages
+                </span>
+                <div className="flex flex-wrap gap-2">
+                  {settings.aboutLanguages.split(',').map((lang, idx) => (
+                    <span
+                      key={idx}
+                      className="px-3 py-1 rounded-md text-xs font-medium bg-[#141720] text-emerald-400/90 border border-emerald-500/20"
+                    >
+                      {lang.trim()}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Interests & Hobbies Tag List */}
             {settings?.aboutInterests && (
               <div className="mb-8">
                 <span className="text-xs uppercase tracking-wider text-[#6b7280] block mb-2 font-medium flex items-center gap-1.5">
                   <Sparkles className="w-3.5 h-3.5 text-amber-400" style={{ color: accent }} />
-                  <span>Interests & Disciplines</span>
+                  <span>Hobbies, Interests & Disciplines</span>
                 </span>
                 <div className="flex flex-wrap gap-2">
                   {(settings.aboutInterests || '')

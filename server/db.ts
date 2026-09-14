@@ -141,20 +141,61 @@ const DEFAULT_DATA: DatabaseSchema = {
   experiences: [], // Zero fake jobs: user prompt states "If there is no experience, hide the public section. Do not create fake experience."
   education: [
     {
-      id: 'edu1',
-      institution: 'University Computer Science & Engineering Department',
-      degree: 'B.Sc. in Computer Science and Engineering',
+      id: 'edu-diu',
+      institution: 'Daffodil International University',
+      degree: 'Bachelor of Science in Computer Science and Engineering',
       department: 'Department of Computer Science and Engineering',
-      startYear: '2023',
+      startYear: '2025',
       endYear: 'Present',
       current: true,
+      grade: 'Currently Enrolled',
       description:
-        'Undergraduate studies covering Data Structures, Algorithms, Object-Oriented Programming, Database Management Systems, Discrete Mathematics, and Computer Architecture.',
+        'Undergraduate studies in Computer Science and Engineering. Academic coursework emphasizing Artificial Intelligence, Data Science, Software Development, Data Structures, Algorithms, and collaborative technical projects.',
+      order: 1,
+      visible: true
+    },
+    {
+      id: 'edu-hsc',
+      institution: 'BAF Shaheen College Shamshernagar',
+      degree: 'Higher Secondary Certificate (HSC)',
+      department: 'Science Division',
+      startYear: '2022',
+      endYear: '2023',
+      current: false,
+      grade: 'GPA 5.00 / 5.00',
+      description:
+        'Graduated with highest academic distinction (GPA 5.00) in Science division. Advanced coursework in Higher Mathematics, Physics, Chemistry, and Information & Communication Technology.',
+      order: 2,
+      visible: true
+    },
+    {
+      id: 'edu-ssc',
+      institution: 'Bishaw Zakir Monzil Govt. High School',
+      degree: 'Secondary School Certificate (SSC)',
+      department: 'Science Division',
+      startYear: '2020',
+      endYear: '2021',
+      current: false,
+      grade: 'GPA 5.00 / 5.00',
+      description:
+        'Completed Secondary School Certificate with a perfect score (GPA 5.00). Fundamental studies in General Science, Mathematics, and Computer Studies.',
+      order: 3,
+      visible: true
+    }
+  ],
+  certifications: [
+    {
+      id: 'cert-ai-prompt',
+      name: 'AI Prompt Engineering Course',
+      issuer: 'NetCom Learning – in collaboration with Microsoft',
+      date: '2024 - 2025',
+      credentialId: 'NETCOM-MSFT-AIPE',
+      description:
+        'Specialized training covering Generative AI fundamentals, context-aware prompt architecture, iterative refinement, system instructions, and modern productivity tooling with Microsoft.',
       order: 1,
       visible: true
     }
   ],
-  certifications: [], // Zero fake certifications: user prompt states "Do not invent: Jobs, Awards, Certifications... Where information is missing, create an empty editable field in admin"
   services: [
     {
       id: 'srv1',
@@ -439,6 +480,17 @@ class Database {
     } else {
       this.data = DEFAULT_DATA;
       this.save();
+    }
+  }
+
+  public reload() {
+    if (fs.existsSync(DB_FILE)) {
+      try {
+        const raw = fs.readFileSync(DB_FILE, 'utf-8');
+        this.data = JSON.parse(raw);
+      } catch (err) {
+        console.error('Failed reading database.json during reload', err);
+      }
     }
   }
 
