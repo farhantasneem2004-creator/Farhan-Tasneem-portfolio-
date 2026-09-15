@@ -12,13 +12,13 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({ project, onClose, ac
   if (!project) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md overflow-y-auto animate-fadeIn">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-6 bg-black/85 backdrop-blur-md overflow-y-auto animate-fadeIn">
       <div
-        className="relative w-full max-w-4xl bg-[#11141c] border border-[#232938] rounded-2xl overflow-hidden shadow-2xl my-8 max-h-[90vh] flex flex-col"
+        className="relative w-full max-w-4xl bg-[#11141c] border border-[#232938] rounded-2xl overflow-hidden shadow-2xl my-4 sm:my-8 max-h-[94vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Top Bar */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#1f2533] bg-[#0e1117]">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 border-b border-[#1f2533] bg-[#0e1117]">
           <div className="flex items-center gap-2.5">
             <span className="w-2 h-2 rounded-full" style={{ backgroundColor: accentColor }} />
             <span className="text-xs uppercase tracking-wider font-semibold text-[#9ca3af]">
@@ -35,11 +35,11 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({ project, onClose, ac
         </div>
 
         {/* Scrollable Content */}
-        <div className="p-6 sm:p-8 overflow-y-auto space-y-6">
+        <div className="p-4 sm:p-8 overflow-y-auto space-y-5 sm:space-y-6">
           
           {/* Main Visual Image */}
           {project.mainImage && (
-            <div className="relative rounded-xl overflow-hidden border border-[#232938] bg-[#0c0e12] aspect-video">
+            <div className="relative rounded-xl overflow-hidden border border-[#232938] bg-[#0c0e12] aspect-video max-h-[48vh]">
               <img
                 src={project.mainImage}
                 alt={project.name}
@@ -51,8 +51,8 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({ project, onClose, ac
 
           {/* Title & Metadata */}
           <div>
-            <div className="flex flex-wrap items-center justify-between gap-4 mb-3">
-              <h2 className="font-display font-bold text-2xl sm:text-3xl text-white">
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+              <h2 className="font-display font-bold text-xl sm:text-2xl lg:text-3xl text-white break-words">
                 {project.name}
               </h2>
               {project.date && (

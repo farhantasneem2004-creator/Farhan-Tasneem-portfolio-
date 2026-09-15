@@ -20,8 +20,8 @@ export const SkillsSection: React.FC<SkillsSectionProps> = ({ skills = [], accen
       : visibleSkills.filter((s) => s.category === selectedCategory);
 
   return (
-    <section id="skills" className="py-24 border-t border-[#1a1f29] relative">
-      <div className="max-w-7xl mx-auto px-6 sm:px-8">
+    <section id="skills" className="py-20 sm:py-24 border-t border-[#1a1f29] relative overflow-x-clip">
+      <div className="max-w-7xl mx-auto px-5 sm:px-8">
         
         {/* Header */}
         <div className="max-w-3xl mb-12">
@@ -31,7 +31,7 @@ export const SkillsSection: React.FC<SkillsSectionProps> = ({ skills = [], accen
               Technical & Creative Matrix
             </span>
           </div>
-          <h2 className="font-display font-bold text-3xl sm:text-4xl text-white tracking-tight leading-tight mb-4">
+          <h2 className="font-display font-bold text-2xl xs:text-3xl sm:text-4xl text-white tracking-tight leading-tight mb-4 break-words">
             Skills, Tools & Proficiencies
           </h2>
           <p className="text-sm sm:text-base text-[#9ca3af] leading-relaxed">
@@ -77,13 +77,13 @@ export const SkillsSection: React.FC<SkillsSectionProps> = ({ skills = [], accen
         </div>
 
         {/* Skills Grid with minimal, elegant progress indicators */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
           {filteredSkills.map((skill) => (
             <div
               key={skill.id}
-              className="p-5 rounded-xl bg-[#12151c] border border-[#1f2533] hover:border-[#2f384c] transition-all group"
+              className="p-4 sm:p-5 rounded-xl bg-[#12151c] border border-[#1f2533] hover:border-[#2f384c] transition-all group"
             >
-              <div className="flex items-center justify-between mb-2">
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
                 <div className="flex items-center gap-2.5">
                   <h3 className="font-semibold text-sm sm:text-base text-white group-hover:text-amber-300 transition-colors">
                     {skill.name}

@@ -12,7 +12,8 @@ import type {
   GalleryImage,
   SocialLink,
   ContactMessage,
-  CVVersion
+  CVVersion,
+  LandingPageLayout
 } from './types.js';
 import { api } from './api.js';
 
@@ -37,6 +38,7 @@ import { AdminLayout, type AdminTab } from './components/admin/AdminLayout.js';
 import { AdminDashboardOverview } from './components/admin/AdminDashboardOverview.js';
 import { AdminProfileSettings } from './components/admin/AdminProfileSettings.js';
 import { AdminHeroSettings } from './components/admin/AdminHeroSettings.js';
+import { AdminLandingPageEditor } from './components/admin/AdminLandingPageEditor.js';
 import { AdminSkillsManager } from './components/admin/AdminSkillsManager.js';
 import { AdminProjectsManager } from './components/admin/AdminProjectsManager.js';
 import { AdminExperienceManager } from './components/admin/AdminExperienceManager.js';
@@ -70,6 +72,7 @@ export default function App() {
   const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
   const [contactMessages, setContactMessages] = useState<ContactMessage[]>([]);
   const [cvVersions, setCvVersions] = useState<CVVersion[]>([]);
+  const [landingPage, setLandingPage] = useState<LandingPageLayout | null>(null);
 
   // Load public portfolio data
   const loadData = async () => {
@@ -87,6 +90,7 @@ export default function App() {
       setGalleryAlbums(data.galleryAlbums || []);
       setGalleryImages(data.galleryImages || []);
       setSocialLinks(data.socialLinks || []);
+      setLandingPage(data.landingPage || null);
 
       // Check if already authenticated
       if (api.isAuthenticated()) {
@@ -217,6 +221,10 @@ export default function App() {
           />
         )}
 
+        {adminTab === 'landing-page-editor' && (
+          <AdminLandingPageEditor settings={settings} />
+        )}
+
         {adminTab === 'profile' && (
           <AdminProfileSettings
             settings={settings}
@@ -337,6 +345,15 @@ export default function App() {
   // --------------------------------------------------------------------------
   const { sectionVisibility } = settings;
 
+  const handleScrollTo = (id: string) => {
+    const el = document.getElementById(id);
+    if (el) {
+      const yOffset = -80;
+      const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
+      window.scrollTo({ top: y, behavior: 'smooth' });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#0c0e12] text-[#f3f4f6] selection:bg-[#e5a93c]/30 selection:text-white">
       {/* Top Navigation */}
@@ -358,6 +375,10 @@ export default function App() {
       <main className="relative z-10 space-y-24 sm:space-y-32">
         <Hero
           settings={settings}
+          landingPage={landingPage}
+          socialLinks={socialLinks}
+          onViewWork={() => handleScrollTo('projects')}
+          onDownloadCv={handleDownloadCV}
           onDownloadCV={handleDownloadCV}
           accentColor={accentColor}
         />

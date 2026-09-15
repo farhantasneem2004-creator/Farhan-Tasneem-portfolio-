@@ -32,18 +32,18 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
   const regularProjects = visibleProjects.filter((p) => !p.featured);
 
   return (
-    <section id="projects" className="py-24 border-t border-[#1a1f29] relative">
-      <div className="max-w-7xl mx-auto px-6 sm:px-8">
+    <section id="projects" className="py-20 sm:py-24 border-t border-[#1a1f29] relative overflow-x-clip">
+      <div className="max-w-7xl mx-auto px-5 sm:px-8">
         
         {/* Section Header */}
-        <div className="max-w-3xl mb-14">
+        <div className="max-w-3xl mb-12 sm:mb-14">
           <div className="inline-flex items-center gap-2 mb-3">
             <span className="w-6 h-[2px]" style={{ backgroundColor: accentColor }} />
             <span className="text-xs uppercase tracking-[0.2em] font-semibold text-[#9ca3af]">
               Selected Works
             </span>
           </div>
-          <h2 className="font-display font-bold text-3xl sm:text-4xl text-white tracking-tight leading-tight mb-4">
+          <h2 className="font-display font-bold text-2xl xs:text-3xl sm:text-4xl text-white tracking-tight leading-tight mb-4 break-words">
             Featured Engineering Case Studies
           </h2>
           <p className="text-sm sm:text-base text-[#9ca3af] leading-relaxed">
@@ -56,12 +56,12 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
           <div
             key={project.id}
             onClick={() => handleSelect(project)}
-            className="mb-12 rounded-2xl bg-[#11141c] border border-[#1f2533] hover:border-[#2f384c] transition-all duration-300 overflow-hidden group cursor-pointer shadow-xl hover:shadow-2xl"
+            className="mb-10 sm:mb-12 rounded-2xl bg-[#11141c] border border-[#1f2533] hover:border-[#2f384c] transition-all duration-300 overflow-hidden group cursor-pointer shadow-xl hover:shadow-2xl"
           >
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-0">
               
               {/* Image Column */}
-              <div className="lg:col-span-7 relative overflow-hidden bg-[#0a0c10] aspect-[16/10] lg:aspect-auto min-h-[300px] lg:min-h-[420px]">
+              <div className="lg:col-span-7 relative overflow-hidden bg-[#0a0c10] aspect-[16/10] lg:aspect-auto min-h-[220px] sm:min-h-[280px] lg:min-h-[400px]">
                 <img
                   src={project.mainImage || '/src/assets/images/efuture_cup_project_1789381795595.jpg'}
                   alt={project.name}
@@ -81,7 +81,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
               </div>
 
               {/* Information Column */}
-              <div className="lg:col-span-5 p-7 sm:p-10 flex flex-col justify-between">
+              <div className="lg:col-span-5 p-5 sm:p-8 lg:p-10 flex flex-col justify-between">
                 <div>
                   <div className="flex items-center justify-between gap-2 mb-3">
                     <span className="text-xs uppercase tracking-wider font-semibold text-[#9ca3af]">
@@ -90,9 +90,9 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                     <span className="text-xs text-[#6b7280] font-mono">{project.date}</span>
                   </div>
 
-                  <h3 className="font-display font-bold text-2xl sm:text-3xl text-white group-hover:text-amber-300 transition-colors mb-4 flex items-center justify-between">
+                  <h3 className="font-display font-bold text-xl sm:text-2xl lg:text-3xl text-white group-hover:text-amber-300 transition-colors mb-3 sm:mb-4 flex items-start justify-between gap-3">
                     <span>{project.name}</span>
-                    <ArrowUpRight className="w-5 h-5 text-[#6b7280] group-hover:text-white group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
+                    <ArrowUpRight className="w-5 h-5 shrink-0 text-[#6b7280] group-hover:text-white group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
                   </h3>
 
                   <p className="text-sm sm:text-base text-[#94a3b8] leading-relaxed mb-6">

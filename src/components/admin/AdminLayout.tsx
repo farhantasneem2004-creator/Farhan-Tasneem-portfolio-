@@ -3,6 +3,7 @@ import {
   LayoutDashboard,
   User,
   Image as ImageIcon,
+  LayoutPanelLeft,
   Wrench,
   FolderGit2,
   Briefcase,
@@ -23,6 +24,7 @@ import type { SiteSettings } from '../../types.js';
 
 export type AdminTab =
   | 'overview'
+  | 'landing-page-editor'
   | 'profile'
   | 'hero'
   | 'skills'
@@ -61,6 +63,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
 
   const navItems: { id: AdminTab; label: string; icon: React.ReactNode; badge?: number }[] = [
     { id: 'overview', label: 'Dashboard Overview', icon: <LayoutDashboard className="w-4 h-4" /> },
+    { id: 'landing-page-editor', label: 'Landing Page Editor', icon: <LayoutPanelLeft className="w-4 h-4" /> },
     { id: 'profile', label: 'Profile & Bio', icon: <User className="w-4 h-4" /> },
     { id: 'hero', label: 'Hero & Imagery', icon: <ImageIcon className="w-4 h-4" /> },
     { id: 'skills', label: 'Skills & Proficiencies', icon: <Wrench className="w-4 h-4" /> },

@@ -11,7 +11,9 @@ import type {
   GalleryAlbum,
   GalleryImage,
   ContactMessage,
-  CVVersion
+  CVVersion,
+  LandingPageLayout,
+  LandingPageVersion
 } from './types.js';
 
 export interface PublicPortfolioData {
@@ -26,6 +28,7 @@ export interface PublicPortfolioData {
   galleryCategories: GalleryCategory[];
   galleryAlbums: GalleryAlbum[];
   galleryImages: GalleryImage[];
+  landingPage?: LandingPageLayout;
 }
 
 export interface AdminStats {
@@ -508,5 +511,67 @@ export const api = {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Upload failed');
     return data;
+  },
+
+  // Landing Page Visual Editor API
+  async getPublishedLandingPage(): Promise<LandingPageLayout> {
+    const res = await fetch('/api/public/landing-page');
+    if (!res.ok) throw new Error('Failed to fetch published landing page');
+    return res.json();
+  },
+
+  async getDraftLandingPage(): Promise<LandingPageLayout> {
+    const res = await fetch('/api/admin/landing-page/draft', { headers: getAuthHeaders() });
+    if (!res.ok) throw new Error('Failed to fetch draft landing page');
+    return res.json();
+  },
+
+  async saveDraftLandingPage(layout: LandingPageLayout): Promise<LandingPageLayout> {
+    const res = await fetch('/api/admin/landing-page/draft', {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(layout)
+    });
+    if (!res.ok) throw new Error('Failed to save draft landing page');
+    return res.json();
+  },
+
+  async publishLandingPage(
+    layout?: LandingPageLayout,
+    name?: string
+  ): Promise<{ success: boolean; published: LandingPageLayout; version: LandingPageVersion }> {
+    const res = await fetch('/api/admin/landing-page/publish', {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ layout, name })
+    });
+    if (!res.ok) throw new Error('Failed to publish landing page');
+    return res.json();
+  },
+
+  async getLandingPageVersions(): Promise<LandingPageVersion[]> {
+    const res = await fetch('/api/admin/landing-page/versions', { headers: getAuthHeaders() });
+    if (!res.ok) throw new Error('Failed to fetch versions');
+    return res.json();
+  },
+
+  async restoreLandingPageVersion(versionId: string): Promise<LandingPageLayout> {
+    const res = await fetch(`/api/admin/landing-page/restore-version/${versionId}`, {
+      method: 'POST',
+      headers: getAuthHeaders()
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to restore version');
+    return data.layout;
+  },
+
+  async resetLandingPage(): Promise<LandingPageLayout> {
+    const res = await fetch('/api/admin/landing-page/reset', {
+      method: 'POST',
+      headers: getAuthHeaders()
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to reset landing page');
+    return data.layout;
   }
 };

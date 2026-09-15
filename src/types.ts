@@ -234,3 +234,95 @@ export interface AdminUser {
   name: string;
   role: string;
 }
+
+// ============================================================================
+// VISUAL LANDING PAGE EDITOR TYPES
+// ============================================================================
+
+export type Breakpoint = 'desktop' | 'tablet' | 'mobile';
+
+export type ElementType =
+  | 'heading'
+  | 'text'
+  | 'button'
+  | 'image'
+  | 'social_links'
+  | 'divider'
+  | 'icon'
+  | 'badge'
+  | 'container'
+  | 'decorative_shape'
+  | 'feature_strip';
+
+export interface ResponsiveElementProps {
+  x: number; // in pixels relative to hero canvas
+  y: number; // in pixels relative to hero canvas
+  width: number; // in pixels
+  height: number; // in pixels
+  fontSize?: number; // in pixels
+  lineHeight?: number; // e.g. 1.1 or 1.5
+  letterSpacing?: number; // in pixels
+  fontWeight?: string; // '400' | '500' | '600' | '700' | '800' | '900'
+  textAlign?: 'left' | 'center' | 'right';
+  visible: boolean;
+  opacity: number; // 0 to 1
+  rotation: number; // 0 to 360
+  zIndex?: number;
+  borderRadius?: number;
+  maxWidth?: number;
+}
+
+export interface LandingPageElement {
+  id: string;
+  name: string; // e.g. "FARHAN Headline", "Profile Image", "Geometric Frame"
+  type: ElementType;
+  content?: string; // primary text content
+  accentContent?: string; // accent text (e.g. TASNEEM in split heading)
+  imageUrl?: string;
+  imageAlt?: string;
+  imageCrop?: 'cover' | 'contain' | 'fill';
+  imagePosition?: string; // 'center', 'center top', 'top', etc.
+  linkUrl?: string; // URL for button or link
+  buttonAction?: 'view_work' | 'download_cv' | 'contact' | 'custom_url';
+  buttonVariant?: 'primary' | 'secondary' | 'outline' | 'ghost';
+  iconName?: string;
+  fontFamily?: string;
+  color?: string;
+  accentColor?: string;
+  backgroundColor?: string;
+  borderColor?: string;
+  borderWidth?: number;
+  borderStyle?: 'solid' | 'dashed' | 'dotted';
+  shapeType?: 'rectangle' | 'circle' | 'glow' | 'frame' | 'line';
+  textTransform?: 'none' | 'uppercase' | 'lowercase' | 'capitalize';
+  items?: Array<{ id: string; label: string; icon?: string; url?: string; platform?: string }>;
+  locked: boolean;
+  order: number;
+
+  // Responsive per-breakpoint coordinates and dimensions:
+  desktop: ResponsiveElementProps;
+  tablet: ResponsiveElementProps;
+  mobile: ResponsiveElementProps;
+}
+
+export interface LandingPageLayout {
+  id: string;
+  version?: number;
+  canvasHeightDesktop: number; // default 820
+  canvasHeightTablet: number; // default 920
+  canvasHeightMobile: number; // default 1100
+  backgroundColor?: string;
+  elements: LandingPageElement[];
+  updatedAt: string;
+}
+
+export interface LandingPageVersion {
+  id: string;
+  version: number;
+  name?: string;
+  publishedAt: string;
+  publishedBy: string;
+  elementCount: number;
+  layout: LandingPageLayout;
+}
+

@@ -14,8 +14,11 @@ import type {
   GalleryAlbum,
   GalleryImage,
   ContactMessage,
-  CVVersion
+  CVVersion,
+  LandingPageLayout,
+  LandingPageVersion
 } from '../src/types.js';
+import { createDefaultLandingPageLayout } from '../src/components/admin/landing-page-editor/defaultLayout.js';
 
 interface DatabaseSchema {
   settings: SiteSettings;
@@ -31,6 +34,9 @@ interface DatabaseSchema {
   galleryImages: GalleryImage[];
   contactMessages: ContactMessage[];
   cvVersions: CVVersion[];
+  landingPageDraft?: LandingPageLayout;
+  landingPagePublished?: LandingPageLayout;
+  landingPageVersions?: LandingPageVersion[];
   admin: {
     email: string;
     passwordHash: string;
@@ -481,6 +487,38 @@ class Database {
       this.data = DEFAULT_DATA;
       this.save();
     }
+
+    // Ensure landing page fields exist
+    this.ensureLandingPageData();
+  }
+
+  private ensureLandingPageData() {
+    let modified = false;
+    if (!this.data.landingPagePublished) {
+      this.data.landingPagePublished = createDefaultLandingPageLayout();
+      modified = true;
+    }
+    if (!this.data.landingPageDraft) {
+      this.data.landingPageDraft = JSON.parse(JSON.stringify(this.data.landingPagePublished));
+      modified = true;
+    }
+    if (!this.data.landingPageVersions || this.data.landingPageVersions.length === 0) {
+      this.data.landingPageVersions = [
+        {
+          id: 'ver_initial_1',
+          version: 1,
+          name: 'Original Portfolio Hero Layout',
+          publishedAt: new Date().toISOString(),
+          publishedBy: this.data.admin?.email || 'farhantasneem2004@gmail.com',
+          elementCount: this.data.landingPagePublished.elements.length,
+          layout: JSON.parse(JSON.stringify(this.data.landingPagePublished))
+        }
+      ];
+      modified = true;
+    }
+    if (modified) {
+      this.save();
+    }
   }
 
   public reload() {
@@ -887,6 +925,88 @@ class Database {
       unreadMessagesCount: this.data.contactMessages.filter((m) => !m.read).length,
       totalMessagesCount: this.data.contactMessages.length
     };
+  }
+
+  // Visual Landing Page Editor Methods
+  getLandingPagePublished(): LandingPageLayout {
+    this.ensureLandingPageData();
+    return this.data.landingPagePublished || createDefaultLandingPageLayout();
+  }
+
+  getLandingPageDraft(): LandingPageLayout {
+    this.ensureLandingPageData();
+    return this.data.landingPageDraft || createDefaultLandingPageLayout();
+  }
+
+  saveLandingPageDraft(layout: LandingPageLayout): LandingPageLayout {
+    this.ensureLandingPageData();
+    const updated: LandingPageLayout = {
+      ...layout,
+      updatedAt: new Date().toISOString()
+    };
+    this.data.landingPageDraft = updated;
+    this.save();
+    return updated;
+  }
+
+  publishLandingPage(publishedBy: string, name?: string): { published: LandingPageLayout; version: LandingPageVersion } {
+    this.ensureLandingPageData();
+    const currentDraft = this.data.landingPageDraft || createDefaultLandingPageLayout();
+    const newVersionNumber = (this.data.landingPageVersions?.length || 0) + 1;
+
+    const publishedLayout: LandingPageLayout = {
+      ...JSON.parse(JSON.stringify(currentDraft)),
+      version: newVersionNumber,
+      updatedAt: new Date().toISOString()
+    };
+
+    const newVersion: LandingPageVersion = {
+      id: `ver_${Date.now()}_${newVersionNumber}`,
+      version: newVersionNumber,
+      name: name || `Published Version ${newVersionNumber}`,
+      publishedAt: new Date().toISOString(),
+      publishedBy: publishedBy || 'Administrator',
+      elementCount: publishedLayout.elements.length,
+      layout: JSON.parse(JSON.stringify(publishedLayout))
+    };
+
+    this.data.landingPagePublished = publishedLayout;
+    this.data.landingPageDraft = JSON.parse(JSON.stringify(publishedLayout));
+    if (!this.data.landingPageVersions) {
+      this.data.landingPageVersions = [];
+    }
+    this.data.landingPageVersions.unshift(newVersion);
+    // Keep last 30 versions
+    if (this.data.landingPageVersions.length > 30) {
+      this.data.landingPageVersions = this.data.landingPageVersions.slice(0, 30);
+    }
+
+    this.save();
+    return { published: publishedLayout, version: newVersion };
+  }
+
+  getLandingPageVersions(): LandingPageVersion[] {
+    this.ensureLandingPageData();
+    return this.data.landingPageVersions || [];
+  }
+
+  restoreLandingPageVersion(versionId: string): LandingPageLayout | null {
+    this.ensureLandingPageData();
+    const target = this.data.landingPageVersions?.find((v) => v.id === versionId);
+    if (!target) return null;
+
+    const restoredLayout: LandingPageLayout = JSON.parse(JSON.stringify(target.layout));
+    restoredLayout.updatedAt = new Date().toISOString();
+    this.data.landingPageDraft = restoredLayout;
+    this.save();
+    return restoredLayout;
+  }
+
+  resetLandingPageLayout(): LandingPageLayout {
+    const defaultLayout = createDefaultLandingPageLayout();
+    this.data.landingPageDraft = JSON.parse(JSON.stringify(defaultLayout));
+    this.save();
+    return this.data.landingPageDraft;
   }
 }
 

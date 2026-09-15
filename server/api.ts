@@ -81,6 +81,7 @@ router.get('/public/portfolio', (req: Request, res: Response) => {
     const galleryCategories = db.getGalleryCategories().filter((c) => c.visible);
     const galleryAlbums = db.getGalleryAlbums().filter((a) => a.visible);
     const galleryImages = db.getGalleryImages().filter((i) => i.visible);
+    const landingPage = db.getLandingPagePublished();
 
     res.json({
       settings,
@@ -93,7 +94,8 @@ router.get('/public/portfolio', (req: Request, res: Response) => {
       services,
       galleryCategories,
       galleryAlbums,
-      galleryImages
+      galleryImages,
+      landingPage
     });
   } catch (err) {
     res.status(500).json({ error: 'Failed to load portfolio' });
@@ -692,6 +694,104 @@ router.get('/cv-export/pdf', (req: Request, res: Response) => {
   } catch (err) {
     console.error('Failed generating PDF:', err);
     res.status(500).json({ error: 'Failed to generate PDF CV' });
+  }
+});
+
+// ==========================================
+// 5. VISUAL LANDING PAGE EDITOR API
+// ==========================================
+
+// Public: Get currently published landing page layout
+router.get('/public/landing-page', (req: Request, res: Response) => {
+  try {
+    const layout = db.getLandingPagePublished();
+    res.json(layout);
+  } catch (err) {
+    console.error('Failed to get published landing page:', err);
+    res.status(500).json({ error: 'Failed to get published landing page' });
+  }
+});
+
+// Admin: Get current draft landing page layout
+router.get('/admin/landing-page/draft', requireAuth, (req: Request, res: Response) => {
+  try {
+    const layout = db.getLandingPageDraft();
+    res.json(layout);
+  } catch (err) {
+    console.error('Failed to get draft landing page:', err);
+    res.status(500).json({ error: 'Failed to get draft landing page' });
+  }
+});
+
+// Admin: Save draft landing page layout
+router.post('/admin/landing-page/draft', requireAuth, (req: Request, res: Response) => {
+  try {
+    const layout = req.body;
+    if (!layout || !Array.isArray(layout.elements)) {
+      return res.status(400).json({ error: 'Invalid layout structure: elements array required' });
+    }
+    const saved = db.saveLandingPageDraft(layout);
+    res.json(saved);
+  } catch (err) {
+    console.error('Failed to save draft landing page:', err);
+    res.status(500).json({ error: 'Failed to save draft landing page' });
+  }
+});
+
+// Admin: Publish landing page (creates a version record and updates published layout)
+router.post('/admin/landing-page/publish', requireAuth, (req: AuthRequest, res: Response) => {
+  try {
+    const { name, layout } = req.body;
+    if (layout && Array.isArray(layout.elements)) {
+      db.saveLandingPageDraft(layout);
+    }
+    const publishedBy = req.user?.email || 'Administrator';
+    const result = db.publishLandingPage(publishedBy, name);
+    res.json({
+      success: true,
+      published: result.published,
+      version: result.version
+    });
+  } catch (err) {
+    console.error('Failed to publish landing page:', err);
+    res.status(500).json({ error: 'Failed to publish landing page' });
+  }
+});
+
+// Admin: Get version history
+router.get('/admin/landing-page/versions', requireAuth, (req: Request, res: Response) => {
+  try {
+    const versions = db.getLandingPageVersions();
+    res.json(versions);
+  } catch (err) {
+    console.error('Failed to get landing page versions:', err);
+    res.status(500).json({ error: 'Failed to get landing page versions' });
+  }
+});
+
+// Admin: Restore a specific version into draft
+router.post('/admin/landing-page/restore-version/:versionId', requireAuth, (req: Request, res: Response) => {
+  try {
+    const { versionId } = req.params;
+    const restored = db.restoreLandingPageVersion(versionId);
+    if (!restored) {
+      return res.status(404).json({ error: 'Version not found' });
+    }
+    res.json({ success: true, layout: restored });
+  } catch (err) {
+    console.error('Failed to restore landing page version:', err);
+    res.status(500).json({ error: 'Failed to restore version' });
+  }
+});
+
+// Admin: Reset landing page to default design
+router.post('/admin/landing-page/reset', requireAuth, (req: Request, res: Response) => {
+  try {
+    const resetLayout = db.resetLandingPageLayout();
+    res.json({ success: true, layout: resetLayout });
+  } catch (err) {
+    console.error('Failed to reset landing page:', err);
+    res.status(500).json({ error: 'Failed to reset landing page' });
   }
 });
 
