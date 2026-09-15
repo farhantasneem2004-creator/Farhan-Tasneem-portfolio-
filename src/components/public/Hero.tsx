@@ -3,6 +3,7 @@ import { ArrowRight, Download, Sparkles, MapPin, GraduationCap } from 'lucide-re
 import type { SiteSettings, SocialLink, LandingPageLayout } from '../../types.js';
 import { DynamicIcon } from '../common/IconHelper.js';
 import { DynamicLandingPageHero } from './DynamicLandingPageHero.js';
+import { getOptimizedImageUrl, DEFAULT_HERO_PORTRAIT } from '../../utils/imageHelper.js';
 
 interface HeroProps {
   settings: SiteSettings;
@@ -13,8 +14,6 @@ interface HeroProps {
   onDownloadCV?: () => void;
   accentColor?: string;
 }
-
-const DEFAULT_PORTRAIT = '/src/assets/images/farhan_hero_portrait_1789381757896.jpg';
 
 export const Hero: React.FC<HeroProps> = ({
   settings,
@@ -41,19 +40,19 @@ export const Hero: React.FC<HeroProps> = ({
     );
   }
 
-  // Resilient image source with automatic fallback if custom path fails
-  const initialImage = settings?.heroImage || DEFAULT_PORTRAIT;
+  // Resilient image source with multi-tier fallback
+  const initialImage = getOptimizedImageUrl(settings?.heroImage);
   const [currentImage, setCurrentImage] = useState<string>(initialImage);
 
   useEffect(() => {
-    if (settings?.heroImage) {
-      setCurrentImage(settings.heroImage);
-    }
+    setCurrentImage(getOptimizedImageUrl(settings?.heroImage));
   }, [settings?.heroImage]);
 
   const handleImageError = () => {
-    if (currentImage !== DEFAULT_PORTRAIT) {
-      setCurrentImage(DEFAULT_PORTRAIT);
+    if (currentImage !== DEFAULT_HERO_PORTRAIT) {
+      setCurrentImage(DEFAULT_HERO_PORTRAIT);
+    } else if (currentImage !== '/images/farhan_hero_portrait_1789381757896.jpg') {
+      setCurrentImage('/images/farhan_hero_portrait_1789381757896.jpg');
     }
   };
 

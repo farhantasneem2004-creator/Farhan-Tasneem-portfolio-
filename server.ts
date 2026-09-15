@@ -10,9 +10,20 @@ async function startServer() {
   app.use(express.json({ limit: '15mb' }));
   app.use(express.urlencoded({ extended: true, limit: '15mb' }));
 
-  // Static uploads directory
+  // Static uploads directory (supports root uploads and public uploads fallback)
   const uploadsPath = path.join(process.cwd(), 'uploads');
   app.use('/uploads', express.static(uploadsPath));
+  const publicUploadsPath = path.join(process.cwd(), 'public', 'uploads');
+  app.use('/uploads', express.static(publicUploadsPath));
+
+  // Serve static assets from src/assets to guarantee backward compatibility
+  const srcAssetsPath = path.join(process.cwd(), 'src', 'assets');
+  app.use('/src/assets', express.static(srcAssetsPath));
+
+  // Serve public static assets (images, fonts, portraits)
+  const publicPath = path.join(process.cwd(), 'public');
+  app.use(express.static(publicPath));
+  app.use('/images', express.static(path.join(publicPath, 'images')));
 
   // Mount API routes FIRST
   app.use('/api', apiRouter);
@@ -22,7 +33,7 @@ async function startServer() {
     res.json({ status: 'ok', name: 'Farhan Tasneem Portfolio API' });
   });
 
-  // Vite middleware for development
+  // Vite middleware for development vs static dist for production
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
       server: { middlewareMode: true },
@@ -31,7 +42,11 @@ async function startServer() {
     app.use(vite.middlewares);
   } else {
     const distPath = path.join(process.cwd(), 'dist');
+    // Ensure static assets within dist take precedence
     app.use(express.static(distPath));
+    app.use('/uploads', express.static(path.join(distPath, 'uploads')));
+    app.use('/images', express.static(path.join(distPath, 'images')));
+    app.use('/src/assets', express.static(path.join(distPath, 'src', 'assets')));
     app.get('*', (req, res) => {
       res.sendFile(path.join(distPath, 'index.html'));
     });

@@ -61,7 +61,7 @@ const DEFAULT_DATA: DatabaseSchema = {
     heroSubtitle: 'CSE Student • Developer • Creative',
     heroDescription:
       "I'm a Computer Science and Engineering student with a passion for programming, web development, creative writing, technical visualization and building meaningful digital projects.",
-    heroImage: '/src/assets/images/farhan_hero_portrait_1789381757896.jpg',
+    heroImage: '/farhan_hero_portrait.jpg',
     heroImageCrop: 'cover',
     heroImagePosition: 'center',
     heroImageStyle: 'editorial',

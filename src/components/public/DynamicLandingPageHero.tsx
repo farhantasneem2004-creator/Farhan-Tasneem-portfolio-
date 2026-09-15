@@ -19,6 +19,7 @@ import {
   ExternalLink
 } from 'lucide-react';
 import type { LandingPageLayout, LandingPageElement, Breakpoint, SiteSettings } from '../../types.js';
+import { getOptimizedImageUrl, DEFAULT_HERO_PORTRAIT } from '../../utils/imageHelper.js';
 
 interface DynamicLandingPageHeroProps {
   layout: LandingPageLayout;
@@ -27,6 +28,57 @@ interface DynamicLandingPageHeroProps {
   onDownloadCv?: () => void;
   accentColor?: string;
 }
+
+const HeroImageElement: React.FC<{
+  element: LandingPageElement;
+  elemStyle: React.CSSProperties;
+  props: any;
+  settings?: SiteSettings;
+}> = ({ element, elemStyle, props, settings }) => {
+  const initialUrl = getOptimizedImageUrl(element.imageUrl || settings?.heroImage);
+  const [imgSrc, setImgSrc] = useState<string>(initialUrl);
+
+  useEffect(() => {
+    setImgSrc(getOptimizedImageUrl(element.imageUrl || settings?.heroImage));
+  }, [element.imageUrl, settings?.heroImage]);
+
+  const handleImgError = () => {
+    if (imgSrc !== DEFAULT_HERO_PORTRAIT) {
+      setImgSrc(DEFAULT_HERO_PORTRAIT);
+    } else if (imgSrc !== '/images/farhan_hero_portrait_1789381757896.jpg') {
+      setImgSrc('/images/farhan_hero_portrait_1789381757896.jpg');
+    }
+  };
+
+  return (
+    <div
+      style={{
+        ...elemStyle,
+        borderRadius: `${props.borderRadius ?? 16}px`,
+        border: element.borderWidth
+          ? `${element.borderWidth}px ${element.borderStyle || 'solid'} ${element.borderColor || '#2e3544'}`
+          : '1px solid #2e3544'
+      }}
+      className="relative overflow-hidden bg-[#12151b] shadow-2xl shadow-black/70 group"
+    >
+      <img
+        src={imgSrc}
+        alt={element.imageAlt || 'Farhan Tasneem - Hero profile'}
+        onError={handleImgError}
+        referrerPolicy="no-referrer"
+        loading="eager"
+        decoding="async"
+        className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
+        style={{
+          objectFit: (element.imageCrop as any) || 'cover',
+          objectPosition: element.imagePosition || 'center top'
+        }}
+      />
+      {/* Subtle bottom gradient for depth */}
+      <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[#0c0e12]/80 to-transparent pointer-events-none" />
+    </div>
+  );
+};
 
 const renderPublicIcon = (name?: string, className = 'w-4 h-4') => {
   if (!name) return null;
@@ -144,16 +196,24 @@ export const DynamicLandingPageHero: React.FC<DynamicLandingPageHeroProps> = ({
       {/* Background Architectural Subtle Ambient Grid */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#161922_1px,transparent_1px),linear-gradient(to_bottom,#161922_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_70%_60%_at_50%_45%,#000_65%,transparent_100%)] opacity-20 pointer-events-none" />
 
-      {/* Main Canvas Container Scaled Proportionally */}
+      {/* Precision Viewport Wrapper - Prevents horizontal overflow & ensures crisp centering on PC and Mobile */}
       <div
-        className="relative shrink-0 transition-transform duration-100 ease-out"
+        className="relative mx-auto flex items-start justify-center"
         style={{
-          width: `${canvasRefWidth}px`,
-          height: `${canvasRefHeight}px`,
-          transform: `scale(${scale})`,
-          transformOrigin: 'top center'
+          width: `${Math.min(containerWidth, Math.round(canvasRefWidth * scale))}px`,
+          height: `${scaledHeight}px`,
+          overflow: 'hidden'
         }}
       >
+        <div
+          className="relative shrink-0 transition-transform duration-100 ease-out"
+          style={{
+            width: `${canvasRefWidth}px`,
+            height: `${canvasRefHeight}px`,
+            transform: `scale(${scale})`,
+            transformOrigin: 'top left'
+          }}
+        >
         {layout.elements.map((element) => {
           const props = element[breakpoint] || element.desktop;
           if (!props || !props.visible) return null;
@@ -284,32 +344,13 @@ export const DynamicLandingPageHero: React.FC<DynamicLandingPageHeroProps> = ({
 
             case 'image':
               return (
-                <div
+                <HeroImageElement
                   key={element.id}
-                  style={{
-                    ...elemStyle,
-                    borderRadius: `${props.borderRadius ?? 16}px`,
-                    border: element.borderWidth
-                      ? `${element.borderWidth}px ${element.borderStyle || 'solid'} ${element.borderColor || '#2e3544'}`
-                      : '1px solid #2e3544'
-                  }}
-                  className="relative overflow-hidden bg-[#12151b] shadow-2xl shadow-black/70 group"
-                >
-                  {element.imageUrl && (
-                    <img
-                      src={element.imageUrl}
-                      alt={element.imageAlt || 'Hero profile'}
-                      referrerPolicy="no-referrer"
-                      className="w-full h-full"
-                      style={{
-                        objectFit: element.imageCrop || 'cover',
-                        objectPosition: element.imagePosition || 'center top'
-                      }}
-                    />
-                  )}
-                  {/* Subtle bottom gradient for depth */}
-                  <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[#0c0e12]/80 to-transparent pointer-events-none" />
-                </div>
+                  element={element}
+                  elemStyle={elemStyle}
+                  props={props}
+                  settings={settings}
+                />
               );
 
             case 'badge':
@@ -457,6 +498,7 @@ export const DynamicLandingPageHero: React.FC<DynamicLandingPageHeroProps> = ({
               return null;
           }
         })}
+        </div>
       </div>
     </section>
   );

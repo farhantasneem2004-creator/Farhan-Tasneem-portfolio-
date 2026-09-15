@@ -45,8 +45,24 @@ h1, h2, h3, .font-display {
   body {
     background: #ffffff !important;
     color: #000000 !important;
+    padding: 0 !important;
+    margin: 0 !important;
   }
-  .no-print {
+  .no-print,
+  aside,
+  nav,
+  header,
+  footer,
+  button {
     display: none !important;
+  }
+  #cv-printable-sheet {
+    max-height: none !important;
+    overflow: visible !important;
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
   }
 }

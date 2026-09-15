@@ -22,6 +22,7 @@ import {
   Image as ImageIcon
 } from 'lucide-react';
 import type { LandingPageElement, Breakpoint } from '../../../types.js';
+import { getOptimizedImageUrl, DEFAULT_HERO_PORTRAIT } from '../../../utils/imageHelper.js';
 
 interface CanvasElementProps {
   element: LandingPageElement;
@@ -226,9 +227,15 @@ export const CanvasElement: React.FC<CanvasElementProps> = ({
           >
             {element.imageUrl ? (
               <img
-                src={element.imageUrl}
+                src={getOptimizedImageUrl(element.imageUrl)}
                 alt={element.imageAlt || 'Hero profile'}
                 referrerPolicy="no-referrer"
+                onError={(e) => {
+                  const target = e.currentTarget;
+                  if (target.src !== window.location.origin + DEFAULT_HERO_PORTRAIT) {
+                    target.src = DEFAULT_HERO_PORTRAIT;
+                  }
+                }}
                 className="w-full h-full pointer-events-none"
                 style={{
                   objectFit: element.imageCrop || 'cover',

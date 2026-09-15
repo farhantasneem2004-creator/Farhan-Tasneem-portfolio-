@@ -205,7 +205,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               onClick={() => {
                 setMobileMenuOpen(false);
-                onOpenAdmin();
+                onOpenAdmin?.();
               }}
               className="inline-flex items-center gap-1.5 px-3 py-2 text-xs text-[#9ca3af] hover:text-white border border-[#222732] rounded-lg"
             >

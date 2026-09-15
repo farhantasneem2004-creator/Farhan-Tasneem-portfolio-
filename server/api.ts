@@ -7,6 +7,7 @@ import jwt from 'jsonwebtoken';
 import { Document, Paragraph, TextRun, HeadingLevel, Packer, AlignmentType } from 'docx';
 import { jsPDF } from 'jspdf';
 import { db } from './db.js';
+import { generateCvPdf, generateCvDocx, CvExportOptions } from './cvExport.js';
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'farhan_tasneem_portfolio_secret_2026';
@@ -455,6 +456,18 @@ router.post('/upload', requireAuth, upload.single('file'), (req: Request, res: R
   }
 
   const fileUrl = `/uploads/${req.file.filename}`;
+
+  // Also sync to public/uploads directory for static web serving
+  try {
+    const publicUploadsDir = path.join(process.cwd(), 'public', 'uploads');
+    if (!fs.existsSync(publicUploadsDir)) {
+      fs.mkdirSync(publicUploadsDir, { recursive: true });
+    }
+    fs.copyFileSync(req.file.path, path.join(publicUploadsDir, req.file.filename));
+  } catch (err) {
+    console.warn('Could not mirror upload to public/uploads:', err);
+  }
+
   res.json({
     url: fileUrl,
     filename: req.file.filename,
@@ -467,235 +480,96 @@ router.post('/upload', requireAuth, upload.single('file'), (req: Request, res: R
 // 4. CV GENERATION & EXPORT (PDF & DOCX)
 // ==========================================
 
-// DOCX Export
-router.get('/cv-export/docx', async (req: Request, res: Response) => {
-  try {
-    const settings = db.getSettings();
-    const skills = db.getSkills().filter((s) => s.visible);
-    const projects = db.getProjects().filter((p) => p.visible);
-    const education = db.getEducation().filter((e) => e.visible);
-    const experiences = db.getExperiences().filter((e) => e.visible);
-
-    const doc = new Document({
-      sections: [
-        {
-          properties: {},
-          children: [
-            new Paragraph({
-              text: 'FARHAN TASNEEM',
-              heading: HeadingLevel.TITLE,
-              alignment: AlignmentType.CENTER
-            }),
-            new Paragraph({
-              text: 'CSE Student • Developer • Creative',
-              alignment: AlignmentType.CENTER
-            }),
-            new Paragraph({
-              text: `${settings.aboutLocation} | Email: farhantasneem2004@gmail.com | GitHub: github.com/farhantasneem`,
-              alignment: AlignmentType.CENTER
-            }),
-            new Paragraph({ text: '' }),
-
-            // Summary
-            new Paragraph({
-              text: 'PROFESSIONAL SUMMARY',
-              heading: HeadingLevel.HEADING_1
-            }),
-            new Paragraph({
-              text: settings.aboutShortBio + ' ' + settings.aboutDetailedBio
-            }),
-            new Paragraph({ text: '' }),
-
-            // Education
-            new Paragraph({
-              text: 'EDUCATION',
-              heading: HeadingLevel.HEADING_1
-            }),
-            ...education.map(
-              (edu) =>
-                new Paragraph({
-                  children: [
-                    new TextRun({ text: edu.degree, bold: true }),
-                    new TextRun({ text: ` — ${edu.institution} (${edu.startYear} - ${edu.endYear})\n` }),
-                    new TextRun({ text: edu.description })
-                  ]
-                })
-            ),
-            new Paragraph({ text: '' }),
-
-            // Technical Skills
-            new Paragraph({
-              text: 'TECHNICAL & CREATIVE SKILLS',
-              heading: HeadingLevel.HEADING_1
-            }),
-            new Paragraph({
-              text: skills.map((s) => `${s.name} (${s.level})`).join(' • ')
-            }),
-            new Paragraph({ text: '' }),
-
-            // Projects
-            new Paragraph({
-              text: 'KEY PROJECTS',
-              heading: HeadingLevel.HEADING_1
-            }),
-            ...projects.map(
-              (p) =>
-                new Paragraph({
-                  children: [
-                    new TextRun({ text: p.name, bold: true }),
-                    new TextRun({ text: ` [${p.technologies.join(', ')}]\n` }),
-                    new TextRun({ text: `${p.shortDescription}\n` }),
-                    new TextRun({ text: p.detailedDescription })
-                  ]
-                })
-            )
-          ]
-        }
-      ]
-    });
-
-    const buffer = await Packer.toBuffer(doc);
-    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
-    res.setHeader('Content-Disposition', 'attachment; filename="Farhan-Tasneem-CV.docx"');
-    res.send(buffer);
-  } catch (err) {
-    console.error('Failed generating DOCX:', err);
-    res.status(500).json({ error: 'Failed to generate DOCX CV' });
+function parseCvOptions(req: Request): CvExportOptions {
+  const source = { ...(req.query || {}), ...(req.body || {}) };
+  let sections: any = undefined;
+  if (typeof source.sections === 'string') {
+    try {
+      sections = JSON.parse(source.sections);
+    } catch {
+      // ignore
+    }
+  } else if (typeof source.sections === 'object') {
+    sections = source.sections;
   }
-});
 
-// PDF Export
-router.get('/cv-export/pdf', (req: Request, res: Response) => {
+  let sectionOrder: string[] | undefined = undefined;
+  if (typeof source.sectionOrder === 'string') {
+    try {
+      sectionOrder = JSON.parse(source.sectionOrder);
+    } catch {
+      sectionOrder = source.sectionOrder.split(',').map((s: string) => s.trim());
+    }
+  } else if (Array.isArray(source.sectionOrder)) {
+    sectionOrder = source.sectionOrder;
+  }
+
+  const cvType = (source.cvType as any) || 'professional';
+  const includePhoto =
+    source.includePhoto === true ||
+    source.includePhoto === 'true' ||
+    source.includePhoto === '1' ||
+    (source.includePhoto === undefined && (cvType === 'creative' || cvType === 'professional'));
+
+  return {
+    cvType,
+    template: (source.template as any) || 'modern',
+    length: (source.length as any) || 'one-page',
+    includePhoto,
+    photoUrl: source.photoUrl,
+    photoShape: source.photoShape,
+    photoPosition: source.photoPosition,
+    accentColor: source.accentColor,
+    customTitle: source.customTitle,
+    customSummary: source.customSummary,
+    sections,
+    sectionOrder
+  };
+}
+
+const handlePdfExport = (req: Request, res: Response) => {
   try {
-    const settings = db.getSettings();
-    const skills = db.getSkills().filter((s) => s.visible);
-    const projects = db.getProjects().filter((p) => p.visible);
-    const education = db.getEducation().filter((e) => e.visible);
+    const options = parseCvOptions(req);
+    const pdfBuffer = generateCvPdf(options);
+    const safeType = (options.cvType || 'Curriculum').replace(/[^a-zA-Z0-9_-]/g, '');
+    const safeName = `Farhan-Tasneem-${safeType}-CV.pdf`;
 
-    const doc = new jsPDF({
-      unit: 'pt',
-      format: 'letter'
-    });
-
-    let y = 45;
-
-    // Header
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(22);
-    doc.setTextColor(20, 20, 20);
-    doc.text('FARHAN TASNEEM', 40, y);
-
-    y += 18;
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(12);
-    doc.setTextColor(180, 120, 30);
-    doc.text('CSE Student • Developer • Creative', 40, y);
-
-    y += 16;
-    doc.setFontSize(9);
-    doc.setTextColor(100, 100, 100);
-    doc.text(`${settings.aboutLocation} | Email: farhantasneem2004@gmail.com | Portfolio Website`, 40, y);
-
-    y += 24;
-    doc.setDrawColor(220, 220, 220);
-    doc.line(40, y, 570, y);
-
-    // About / Summary
-    y += 20;
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(12);
-    doc.setTextColor(30, 30, 30);
-    doc.text('SUMMARY', 40, y);
-
-    y += 14;
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(9.5);
-    doc.setTextColor(60, 60, 60);
-    const summaryLines = doc.splitTextToSize(settings.aboutShortBio + ' ' + settings.aboutDetailedBio, 530);
-    doc.text(summaryLines, 40, y);
-    y += summaryLines.length * 13 + 12;
-
-    // Education
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(12);
-    doc.setTextColor(30, 30, 30);
-    doc.text('EDUCATION', 40, y);
-    y += 15;
-
-    education.forEach((edu) => {
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(10);
-      doc.setTextColor(40, 40, 40);
-      doc.text(edu.degree, 40, y);
-
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(120, 120, 120);
-      doc.text(`${edu.startYear} - ${edu.endYear}`, 520, y, { align: 'right' });
-
-      y += 12;
-      doc.setFont('helvetica', 'italic');
-      doc.setTextColor(70, 70, 70);
-      doc.text(edu.institution, 40, y);
-
-      y += 12;
-      doc.setFont('helvetica', 'normal');
-      const descLines = doc.splitTextToSize(edu.description, 530);
-      doc.text(descLines, 40, y);
-      y += descLines.length * 12 + 10;
-    });
-
-    // Technical Skills
-    y += 8;
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(12);
-    doc.setTextColor(30, 30, 30);
-    doc.text('SKILLS & EXPERTISE', 40, y);
-    y += 14;
-
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(9);
-    doc.setTextColor(50, 50, 50);
-
-    const skillsText = skills.map((s) => `${s.name} (${s.level})`).join('  •  ');
-    const skillLines = doc.splitTextToSize(skillsText, 530);
-    doc.text(skillLines, 40, y);
-    y += skillLines.length * 13 + 14;
-
-    // Key Projects
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(12);
-    doc.setTextColor(30, 30, 30);
-    doc.text('FEATURED PROJECTS', 40, y);
-    y += 15;
-
-    projects.forEach((proj) => {
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(10);
-      doc.setTextColor(40, 40, 40);
-      doc.text(proj.name, 40, y);
-
-      y += 12;
-      doc.setFont('helvetica', 'italic');
-      doc.setTextColor(180, 120, 30);
-      doc.text(`Tech: ${proj.technologies.join(', ')}`, 40, y);
-
-      y += 12;
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(60, 60, 60);
-      const projLines = doc.splitTextToSize(proj.detailedDescription, 530);
-      doc.text(projLines, 40, y);
-      y += projLines.length * 12 + 10;
-    });
-
-    const pdfBuffer = Buffer.from(doc.output('arraybuffer'));
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', 'attachment; filename="Farhan-Tasneem-CV.pdf"');
+    res.setHeader('Content-Disposition', `attachment; filename="${safeName}"`);
     res.send(pdfBuffer);
   } catch (err) {
-    console.error('Failed generating PDF:', err);
+    console.error('Failed generating PDF CV:', err);
     res.status(500).json({ error: 'Failed to generate PDF CV' });
   }
-});
+};
+
+const handleDocxExport = async (req: Request, res: Response) => {
+  try {
+    const options = parseCvOptions(req);
+    const docxBuffer = await generateCvDocx(options);
+    const safeType = (options.cvType || 'Curriculum').replace(/[^a-zA-Z0-9_-]/g, '');
+    const safeName = `Farhan-Tasneem-${safeType}-CV.docx`;
+
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+    res.setHeader('Content-Disposition', `attachment; filename="${safeName}"`);
+    res.send(docxBuffer);
+  } catch (err) {
+    console.error('Failed generating DOCX CV:', err);
+    res.status(500).json({ error: 'Failed to generate DOCX CV' });
+  }
+};
+
+// PDF routes (both public and admin paths, GET and POST)
+router.get('/cv-export/pdf', handlePdfExport);
+router.post('/cv-export/pdf', handlePdfExport);
+router.get('/admin/cv/export/pdf', handlePdfExport);
+router.post('/admin/cv/export/pdf', handlePdfExport);
+
+// DOCX routes (both public and admin paths, GET and POST)
+router.get('/cv-export/docx', handleDocxExport);
+router.post('/cv-export/docx', handleDocxExport);
+router.get('/admin/cv/export/docx', handleDocxExport);
+router.post('/admin/cv/export/docx', handleDocxExport);
 
 // ==========================================
 // 5. VISUAL LANDING PAGE EDITOR API

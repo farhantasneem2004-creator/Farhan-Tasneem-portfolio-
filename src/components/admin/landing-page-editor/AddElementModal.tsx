@@ -204,7 +204,7 @@ export const AddElementModal: React.FC<AddElementModalProps> = ({
         id: `elem_img_${Date.now()}`,
         name: 'Showcase Image',
         type: 'image',
-        imageUrl: '/src/assets/images/farhan_hero_portrait_1789381757896.jpg',
+        imageUrl: '/farhan_hero_portrait.jpg',
         imageAlt: 'Farhan Tasneem',
         imageCrop: 'cover',
         imagePosition: 'center',

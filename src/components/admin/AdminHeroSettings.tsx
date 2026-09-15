@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Save, Upload, CheckCircle2, Image as ImageIcon } from 'lucide-react';
 import type { SiteSettings } from '../../types.js';
 import { api } from '../../api.js';
+import { getOptimizedImageUrl, DEFAULT_HERO_PORTRAIT } from '../../utils/imageHelper.js';
 
 interface AdminHeroSettingsProps {
   settings: SiteSettings;
@@ -189,9 +190,15 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
                 />
               )}
               <img
-                src={formData.heroImage || '/src/assets/images/farhan_hero_portrait_1789381757896.jpg'}
+                src={getOptimizedImageUrl(formData.heroImage)}
                 alt="Preview"
                 referrerPolicy="no-referrer"
+                onError={(e) => {
+                  const target = e.currentTarget;
+                  if (target.src !== window.location.origin + DEFAULT_HERO_PORTRAIT) {
+                    target.src = DEFAULT_HERO_PORTRAIT;
+                  }
+                }}
                 className="w-full h-full object-cover"
                 style={{ objectPosition: formData.heroImagePosition || 'center' }}
               />

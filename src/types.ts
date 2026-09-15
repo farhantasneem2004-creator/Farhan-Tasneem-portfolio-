@@ -207,9 +207,15 @@ export interface ContactMessage {
 
 export interface CVVersion {
   id: string;
-  title: string; // e.g. "General CV", "Software Development CV", "Freelance CV", "Academic CV"
-  template: 'classic' | 'modern' | 'compact';
+  title: string; // e.g. "Academic CV", "Professional CV", "Software Development CV", "Creative CV"
+  cvType?: 'academic' | 'professional' | 'technical' | 'creative' | 'general';
+  template: 'classic' | 'modern' | 'compact' | 'sidebar';
   length: 'one-page' | 'two-page' | 'extended';
+  photoUrl?: string;
+  photoShape?: 'circle' | 'rounded' | 'square';
+  photoPosition?: 'header-right' | 'header-left' | 'sidebar';
+  accentColor?: string;
+  fontFamily?: 'sans' | 'serif' | 'mono';
   sections: {
     profilePicture: boolean;
     about: boolean;
