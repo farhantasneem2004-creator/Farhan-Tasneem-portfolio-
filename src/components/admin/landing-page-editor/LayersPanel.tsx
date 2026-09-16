@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Layers,
   Heading,
@@ -17,7 +17,9 @@ import {
   MoveDown,
   Trash2,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Search,
+  X
 } from 'lucide-react';
 import type { LandingPageElement, Breakpoint } from '../../../types.js';
 
@@ -69,22 +71,37 @@ export const LayersPanel: React.FC<LayersPanelProps> = ({
   onMoveLayer,
   accentColor
 }) => {
+  const [searchQuery, setSearchQuery] = useState('');
+
   // Sort layers top to bottom (highest z-index / order on top)
-  const sortedLayers = [...elements].sort((a, b) => {
-    const zA = a[breakpoint]?.zIndex ?? a.order;
-    const zB = b[breakpoint]?.zIndex ?? b.order;
-    return zB - zA;
-  });
+  const sortedLayers = [...elements]
+    .sort((a, b) => {
+      const zA = a[breakpoint]?.zIndex ?? a.order;
+      const zB = b[breakpoint]?.zIndex ?? b.order;
+      return zB - zA;
+    })
+    .filter((layer) => {
+      if (!searchQuery.trim()) return true;
+      const q = searchQuery.toLowerCase();
+      return (
+        layer.name?.toLowerCase().includes(q) ||
+        layer.type?.toLowerCase().includes(q) ||
+        layer.content?.toLowerCase().includes(q)
+      );
+    });
 
   if (!isOpen) {
     return (
       <button
         type="button"
         onClick={onToggleOpen}
-        title="Open Layers Panel"
-        className="absolute top-20 left-4 z-20 p-2.5 rounded-xl bg-[#12151e] border border-[#222938] text-[#9ca3af] hover:text-white shadow-lg hover:bg-[#181d29] transition-all"
+        title="Expand Layers Panel"
+        className="w-10 bg-[#0e1117] border-r border-[#1b202c] hover:bg-[#151924] flex flex-col items-center py-4 gap-3 text-[#9ca3af] hover:text-white transition-all cursor-pointer shrink-0 z-20"
       >
         <Layers className="w-4 h-4 text-amber-400" />
+        <span className="text-[10px] font-mono uppercase tracking-wider [writing-mode:vertical-rl] text-[#6b7280] hover:text-[#d1d5db]">
+          Layers ({elements.length})
+        </span>
       </button>
     );
   }
@@ -101,11 +118,34 @@ export const LayersPanel: React.FC<LayersPanelProps> = ({
         <button
           type="button"
           onClick={onToggleOpen}
-          className="p-1 rounded text-[#9ca3af] hover:text-white hover:bg-[#1c2230]"
+          className="p-1 rounded text-[#9ca3af] hover:text-white hover:bg-[#1c2230] transition-colors"
           title="Collapse Layers Panel"
         >
           <ChevronLeft className="w-4 h-4" />
         </button>
+      </div>
+
+      {/* Search filter */}
+      <div className="p-2 border-b border-[#1b202c] bg-[#0c0f15]">
+        <div className="relative">
+          <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-[#6b7280]" />
+          <input
+            type="text"
+            placeholder="Filter layers..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-8 pr-7 py-1.5 bg-[#141822] border border-[#222938] rounded-lg text-xs text-white placeholder-[#6b7280] focus:outline-none focus:border-amber-500/50"
+          />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => setSearchQuery('')}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-[#6b7280] hover:text-white"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Layers List */}

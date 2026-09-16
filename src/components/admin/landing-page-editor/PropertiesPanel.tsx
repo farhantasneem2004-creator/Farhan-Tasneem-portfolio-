@@ -35,6 +35,8 @@ interface PropertiesPanelProps {
   selectedElement: LandingPageElement | null;
   layout: LandingPageLayout;
   breakpoint: Breakpoint;
+  isOpen: boolean;
+  onToggleOpen: () => void;
   onUpdateElement: (updated: LandingPageElement) => void;
   onDeleteElement: (id: string) => void;
   onDuplicateElement: (id: string) => void;
@@ -48,6 +50,8 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
   selectedElement,
   layout,
   breakpoint,
+  isOpen,
+  onToggleOpen,
   onUpdateElement,
   onDeleteElement,
   onDuplicateElement,
@@ -59,6 +63,23 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
   const [activeTab, setActiveTab] = useState<'layout' | 'style' | 'content'>('layout');
   const [isUploading, setIsUploading] = useState(false);
 
+  // If collapsed, show minimal vertical tab
+  if (!isOpen) {
+    return (
+      <button
+        type="button"
+        onClick={onToggleOpen}
+        title="Expand Properties Inspector"
+        className="w-10 bg-[#0e1117] border-l border-[#1b202c] hover:bg-[#151924] flex flex-col items-center py-4 gap-3 text-[#9ca3af] hover:text-white transition-all cursor-pointer shrink-0 z-20"
+      >
+        <Sliders className="w-4 h-4 text-amber-400" />
+        <span className="text-[10px] font-mono uppercase tracking-wider [writing-mode:vertical-rl] text-[#6b7280] hover:text-[#d1d5db]">
+          Properties
+        </span>
+      </button>
+    );
+  }
+
   // If no element selected, show canvas properties
   if (!selectedElement) {
     const canvasHeightKey =
@@ -69,10 +90,20 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
         : 'canvasHeightMobile';
 
     return (
-      <aside className="w-80 bg-[#0e1117] border-l border-[#1b202c] p-4 flex flex-col gap-6 overflow-y-auto shrink-0 select-none text-xs text-[#d1d5db]">
-        <div>
-          <h3 className="font-semibold text-sm text-white mb-1">Canvas Settings</h3>
-          <p className="text-[#6b7280]">Select any element on canvas to adjust its properties, or customize canvas height below.</p>
+      <aside className="w-72 lg:w-80 bg-[#0e1117] border-l border-[#1b202c] p-4 flex flex-col gap-6 overflow-y-auto shrink-0 select-none text-xs text-[#d1d5db]">
+        <div className="flex items-center justify-between pb-3 border-b border-[#1b202c]">
+          <div>
+            <h3 className="font-semibold text-sm text-white">Canvas Settings</h3>
+            <p className="text-[11px] text-[#6b7280]">Default landing viewport</p>
+          </div>
+          <button
+            type="button"
+            onClick={onToggleOpen}
+            className="p-1 rounded-lg text-[#9ca3af] hover:text-white hover:bg-[#1c2230] transition-colors"
+            title="Collapse Properties Panel"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
         </div>
 
         <div className="space-y-4">
@@ -195,6 +226,15 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
       setIsUploading(true);
       const res = await api.uploadFile(file);
       updateRootProp({ imageUrl: res.url });
+      // If updating hero image element, automatically synchronize with site settings
+      if (
+        selectedElement &&
+        (selectedElement.id === 'elem-hero-image' ||
+          selectedElement.name?.toLowerCase().includes('hero') ||
+          selectedElement.type === 'image')
+      ) {
+        api.updateSettings({ heroImage: res.url }).catch(console.error);
+      }
     } catch (err) {
       console.error('Failed uploading image:', err);
     } finally {
@@ -212,11 +252,21 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
             type="text"
             value={selectedElement.name}
             onChange={(e) => updateRootProp({ name: e.target.value })}
-            className="bg-transparent font-semibold text-white text-sm focus:outline-none focus:bg-[#1a2130] px-1.5 py-0.5 rounded border border-transparent focus:border-[#2f394d] truncate"
+            className="bg-transparent font-semibold text-white text-sm focus:outline-none focus:bg-[#1a2130] px-1.5 py-0.5 rounded border border-transparent focus:border-[#2f394d] truncate flex-1 min-w-0"
           />
-          <span className="px-2 py-0.5 rounded-full text-[10px] bg-[#1c2230] text-amber-400 font-medium capitalize">
-            {selectedElement.type}
-          </span>
+          <div className="flex items-center gap-1.5 shrink-0">
+            <span className="px-2 py-0.5 rounded-full text-[10px] bg-[#1c2230] text-amber-400 font-medium capitalize">
+              {selectedElement.type}
+            </span>
+            <button
+              type="button"
+              onClick={onToggleOpen}
+              className="p-1 rounded text-[#9ca3af] hover:text-white hover:bg-[#1c2230] transition-colors"
+              title="Collapse Properties Panel"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
         {/* Quick Action Buttons */}

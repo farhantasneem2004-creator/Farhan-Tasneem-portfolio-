@@ -28,6 +28,11 @@ export function getOptimizedImageUrl(rawUrl?: string | null): string {
     return trimmed;
   }
 
+  // Uploaded files must be preserved exactly as uploaded
+  if (trimmed.startsWith('/uploads/') || trimmed.startsWith('uploads/')) {
+    return trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+  }
+
   // Any variation of Farhan's portrait image
   if (trimmed.includes('farhan_hero_portrait')) {
     return DEFAULT_HERO_PORTRAIT;

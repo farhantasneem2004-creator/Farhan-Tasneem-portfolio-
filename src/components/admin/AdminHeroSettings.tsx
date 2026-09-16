@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Save, Upload, CheckCircle2, Image as ImageIcon } from 'lucide-react';
 import type { SiteSettings } from '../../types.js';
 import { api } from '../../api.js';
@@ -20,6 +20,11 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
   const [uploading, setUploading] = useState(false);
   const [success, setSuccess] = useState(false);
 
+  // Keep formData synchronized if incoming settings prop updates
+  useEffect(() => {
+    setFormData({ ...settings });
+  }, [settings]);
+
   const handleSave = async () => {
     setSaving(true);
     try {
@@ -40,7 +45,13 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
     setUploading(true);
     try {
       const { url } = await api.uploadFile(file);
-      setFormData((prev) => ({ ...prev, heroImage: url }));
+      const updatedData = { ...formData, heroImage: url };
+      setFormData(updatedData);
+      // Automatically persist and synchronize directly to the live landing page
+      const updated = await api.updateSettings(updatedData);
+      onSettingsUpdated(updated);
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 4000);
     } catch (err: any) {
       alert('Upload failed: ' + err.message);
     } finally {

@@ -18,7 +18,11 @@ import {
   LogOut,
   ExternalLink,
   Menu,
-  X
+  X,
+  ChevronLeft,
+  ChevronRight,
+  PanelLeftClose,
+  PanelLeftOpen
 } from 'lucide-react';
 import type { SiteSettings } from '../../types.js';
 
@@ -59,7 +63,9 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
   children
 }) => {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [desktopSidebarCollapsed, setDesktopSidebarCollapsed] = useState(currentTab === 'landing-page-editor');
   const accent = settings.accentColor || '#e5a93c';
+  const isEditor = currentTab === 'landing-page-editor';
 
   const navItems: { id: AdminTab; label: string; icon: React.ReactNode; badge?: number }[] = [
     { id: 'overview', label: 'Dashboard Overview', icon: <LayoutDashboard className="w-4 h-4" /> },
@@ -120,43 +126,75 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
 
       {/* Admin Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 w-72 bg-[#0c0f15] border-r border-[#1a1f2c] flex flex-col justify-between transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static ${
-          mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        className={`fixed inset-y-0 left-0 z-40 bg-[#0c0f15] border-r border-[#1a1f2c] flex flex-col justify-between transform transition-all duration-300 ease-in-out lg:static ${
+          desktopSidebarCollapsed ? 'lg:w-16' : 'lg:w-72'
+        } ${
+          mobileSidebarOpen ? 'w-72 translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >
         {/* Sidebar Brand & Public Link */}
         <div>
-          <div className="p-6 border-b border-[#181d28] flex items-center justify-between">
-            <div>
-              <div className="flex items-baseline gap-1">
-                <span className="font-display font-extrabold text-xl text-white">Farhan</span>
-                <span className="font-display font-extrabold text-xl" style={{ color: accent }}>
-                  Tasneem
+          <div className={`p-4 border-b border-[#181d28] flex items-center ${desktopSidebarCollapsed ? 'justify-center' : 'justify-between'}`}>
+            {!desktopSidebarCollapsed && (
+              <div>
+                <div className="flex items-baseline gap-1">
+                  <span className="font-display font-extrabold text-xl text-white">Farhan</span>
+                  <span className="font-display font-extrabold text-xl" style={{ color: accent }}>
+                    Tasneem
+                  </span>
+                </div>
+                <span className="text-[10px] font-mono uppercase tracking-widest text-[#6b7280] block mt-0.5">
+                  Control Studio v2.4
                 </span>
               </div>
-              <span className="text-[10px] font-mono uppercase tracking-widest text-[#6b7280] block mt-0.5">
-                Control Studio v2.4
-              </span>
-            </div>
+            )}
 
-            <button
-              onClick={onViewPublicSite}
-              className="p-2 rounded-lg text-[#9ca3af] hover:text-white bg-[#131720] border border-[#202634] hover:border-amber-500/40 transition-colors"
-              title="View Public Portfolio"
-            >
-              <ExternalLink className="w-4 h-4" />
-            </button>
+            {desktopSidebarCollapsed && (
+              <div
+                className="w-9 h-9 rounded-xl flex items-center justify-center font-extrabold text-sm border border-[#242b3b]"
+                style={{ backgroundColor: `${accent}15`, color: accent }}
+                title="Farhan Admin Control Studio"
+              >
+                FT
+              </div>
+            )}
+
+            <div className="flex items-center gap-1">
+              {!desktopSidebarCollapsed && (
+                <button
+                  onClick={onViewPublicSite}
+                  className="p-2 rounded-lg text-[#9ca3af] hover:text-white bg-[#131720] border border-[#202634] hover:border-amber-500/40 transition-colors"
+                  title="View Public Portfolio"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                </button>
+              )}
+              {/* Desktop Sidebar Collapse Toggle */}
+              <button
+                type="button"
+                onClick={() => setDesktopSidebarCollapsed(!desktopSidebarCollapsed)}
+                className="hidden lg:flex p-2 rounded-lg text-[#9ca3af] hover:text-white bg-[#131720] border border-[#202634] hover:border-amber-500/40 transition-colors"
+                title={desktopSidebarCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar to Icon Rail'}
+              >
+                {desktopSidebarCollapsed ? <PanelLeftOpen className="w-4 h-4 text-amber-400" /> : <PanelLeftClose className="w-4 h-4" />}
+              </button>
+            </div>
           </div>
 
           {/* Navigation Links */}
-          <nav className="p-4 space-y-1 overflow-y-auto max-h-[calc(100vh-210px)] custom-scrollbar">
+          <nav className="p-2 space-y-1 overflow-y-auto max-h-[calc(100vh-210px)] custom-scrollbar">
             {navItems.map((item) => {
               const isActive = currentTab === item.id;
               return (
                 <button
                   key={item.id}
                   onClick={() => handleSelectTab(item.id)}
-                  className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all cursor-pointer ${
+                  title={desktopSidebarCollapsed ? item.label : undefined}
+                  className={`w-full flex items-center rounded-xl text-xs font-medium transition-all cursor-pointer ${
+                    desktopSidebarCollapsed
+                      ? 'justify-center p-3'
+                      : 'justify-between px-3.5 py-2.5'
+                  } ${
                     isActive
                       ? 'text-white bg-[#181d28] font-semibold border border-[#283144] shadow-sm'
                       : 'text-[#9ca3af] hover:text-white hover:bg-[#121620]'
@@ -164,21 +202,24 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
                   style={
                     isActive
                       ? {
-                          borderLeftWidth: '3px',
+                          borderLeftWidth: desktopSidebarCollapsed ? '1px' : '3px',
                           borderLeftColor: accent
                         }
                       : {}
                   }
                 >
-                  <div className="flex items-center gap-3">
+                  <div className={`flex items-center ${desktopSidebarCollapsed ? 'justify-center' : 'gap-3'}`}>
                     <span style={{ color: isActive ? accent : undefined }}>{item.icon}</span>
-                    <span>{item.label}</span>
+                    {!desktopSidebarCollapsed && <span>{item.label}</span>}
                   </div>
 
-                  {item.badge && (
+                  {!desktopSidebarCollapsed && item.badge && (
                     <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500 text-black">
                       {item.badge}
                     </span>
+                  )}
+                  {desktopSidebarCollapsed && item.badge && (
+                    <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-amber-500" />
                   )}
                 </button>
               );
@@ -187,32 +228,56 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
         </div>
 
         {/* Sidebar Footer */}
-        <div className="p-4 border-t border-[#181d28] space-y-2">
-          <div className="flex items-center gap-3 px-3 py-2 rounded-xl bg-[#10131b] border border-[#1d222f]">
-            <div className="w-7 h-7 rounded-full bg-amber-500/20 flex items-center justify-center text-xs font-bold text-amber-300">
-              FT
-            </div>
-            <div className="overflow-hidden">
-              <span className="text-xs font-medium text-white block truncate">Farhan Tasneem</span>
-              <span className="text-[10px] text-[#6b7280] block truncate">farhantasneem2004@gmail.com</span>
-            </div>
-          </div>
+        <div className="p-2 lg:p-3 border-t border-[#181d28] space-y-2">
+          {!desktopSidebarCollapsed ? (
+            <>
+              <div className="flex items-center gap-3 px-3 py-2 rounded-xl bg-[#10131b] border border-[#1d222f]">
+                <div className="w-7 h-7 rounded-full bg-amber-500/20 flex items-center justify-center text-xs font-bold text-amber-300">
+                  FT
+                </div>
+                <div className="overflow-hidden">
+                  <span className="text-xs font-medium text-white block truncate">Farhan Tasneem</span>
+                  <span className="text-[10px] text-[#6b7280] block truncate">farhantasneem2004@gmail.com</span>
+                </div>
+              </div>
 
-          <button
-            onClick={onLogout}
-            className="w-full flex items-center gap-2.5 px-3.5 py-2 rounded-lg text-xs font-medium text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 transition-colors cursor-pointer"
-          >
-            <LogOut className="w-4 h-4" />
-            <span>Sign Out Admin</span>
-          </button>
+              <button
+                onClick={onLogout}
+                className="w-full flex items-center gap-2.5 px-3.5 py-2 rounded-lg text-xs font-medium text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 transition-colors cursor-pointer"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Sign Out Admin</span>
+              </button>
+            </>
+          ) : (
+            <div className="flex flex-col items-center gap-2 py-1">
+              <div
+                className="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center text-xs font-bold text-amber-300 border border-amber-500/30 cursor-pointer"
+                title="Farhan Tasneem (Admin)"
+              >
+                FT
+              </div>
+              <button
+                onClick={onLogout}
+                className="p-2 rounded-lg text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 transition-colors"
+                title="Sign Out"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
+          )}
         </div>
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 min-w-0 p-6 sm:p-8 lg:p-10 overflow-y-auto max-h-screen">
-        <div className="max-w-6xl mx-auto">
-          {children}
-        </div>
+      <main className={`flex-1 min-w-0 ${isEditor ? 'p-0 overflow-hidden h-screen flex flex-col' : 'p-6 sm:p-8 lg:p-10 overflow-y-auto max-h-screen'}`}>
+        {isEditor ? (
+          children
+        ) : (
+          <div className="max-w-6xl mx-auto">
+            {children}
+          </div>
+        )}
       </main>
 
     </div>

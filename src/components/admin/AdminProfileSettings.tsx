@@ -44,7 +44,13 @@ export const AdminProfileSettings: React.FC<AdminProfileSettingsProps> = ({
     setUploading(true);
     try {
       const { url } = await api.uploadFile(file);
-      setFormData((prev) => ({ ...prev, aboutPhoto: url }));
+      const updatedData = { ...formData, aboutPhoto: url };
+      setFormData(updatedData);
+      // Auto-save and sync to public website immediately
+      const updated = await api.updateSettings(updatedData);
+      onSettingsUpdated(updated);
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 4000);
     } catch (err: any) {
       alert('Upload failed: ' + err.message);
     } finally {

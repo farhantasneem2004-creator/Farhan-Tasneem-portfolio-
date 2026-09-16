@@ -141,6 +141,38 @@ export default function App() {
     loadAdminData();
   };
 
+  const handleSettingsUpdated = (updated: SiteSettings) => {
+    setSettings(updated);
+    // Directly update hero image and positioning on the active landing page layout state
+    if (updated.heroImage) {
+      setLandingPage((prev) => {
+        if (!prev || !prev.elements) return prev;
+        return {
+          ...prev,
+          elements: prev.elements.map((el) => {
+            if (el.id === 'elem-hero-image' || el.type === 'image') {
+              return {
+                ...el,
+                imageUrl: updated.heroImage,
+                imagePosition: updated.heroImagePosition || el.imagePosition
+              };
+            }
+            return el;
+          })
+        };
+      });
+    }
+    // Fetch refreshed public data in background to ensure all components and caches stay in perfect sync
+    api.getPublicData().then((freshData) => {
+      if (freshData.landingPage) {
+        setLandingPage(freshData.landingPage);
+      }
+      if (freshData.settings) {
+        setSettings(freshData.settings);
+      }
+    }).catch(console.error);
+  };
+
   const handleLogout = () => {
     api.logout();
     setIsAuthenticated(false);
@@ -222,13 +254,20 @@ export default function App() {
         )}
 
         {adminTab === 'landing-page-editor' && (
-          <AdminLandingPageEditor settings={settings} />
+          <AdminLandingPageEditor
+            settings={settings}
+            onLandingPagePublished={(pub) => {
+              setLandingPage(pub);
+              loadData();
+            }}
+            onSettingsUpdated={handleSettingsUpdated}
+          />
         )}
 
         {adminTab === 'profile' && (
           <AdminProfileSettings
             settings={settings}
-            onSettingsUpdated={(updated) => setSettings(updated)}
+            onSettingsUpdated={handleSettingsUpdated}
             accentColor={accentColor}
           />
         )}
@@ -236,7 +275,7 @@ export default function App() {
         {adminTab === 'hero' && (
           <AdminHeroSettings
             settings={settings}
-            onSettingsUpdated={(updated) => setSettings(updated)}
+            onSettingsUpdated={handleSettingsUpdated}
             accentColor={accentColor}
           />
         )}
@@ -333,7 +372,7 @@ export default function App() {
         {adminTab === 'settings' && (
           <AdminWebsiteSettings
             settings={settings}
-            onSettingsUpdated={(updated) => setSettings(updated)}
+            onSettingsUpdated={handleSettingsUpdated}
           />
         )}
       </AdminLayout>

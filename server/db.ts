@@ -516,6 +516,27 @@ class Database {
       ];
       modified = true;
     }
+
+    // Automatically synchronize heroImage from settings to landing page elements
+    if (this.data.settings?.heroImage) {
+      const heroUrl = this.data.settings.heroImage;
+      const heroPos = this.data.settings.heroImagePosition || 'center top';
+      const syncHero = (layout?: LandingPageLayout) => {
+        if (!layout || !Array.isArray(layout.elements)) return;
+        for (const el of layout.elements) {
+          if (el.id === 'elem-hero-image' || el.type === 'image') {
+            if (el.imageUrl !== heroUrl) {
+              el.imageUrl = heroUrl;
+              if (heroPos) el.imagePosition = heroPos;
+              modified = true;
+            }
+          }
+        }
+      };
+      syncHero(this.data.landingPagePublished);
+      syncHero(this.data.landingPageDraft);
+    }
+
     if (modified) {
       this.save();
     }
@@ -547,6 +568,39 @@ class Database {
 
   updateSettings(settings: Partial<SiteSettings>): SiteSettings {
     this.data.settings = { ...this.data.settings, ...settings };
+
+    // Synchronize hero image and visual properties to published and draft landing page layouts
+    if (settings.heroImage !== undefined) {
+      const newImg = settings.heroImage;
+      const newPos = settings.heroImagePosition || this.data.settings.heroImagePosition || 'center top';
+      const newCrop = settings.heroImageCrop || this.data.settings.heroImageCrop || 'cover';
+
+      const syncHeroToLayout = (layout?: LandingPageLayout | null) => {
+        if (!layout || !Array.isArray(layout.elements)) return;
+        let changed = false;
+        for (const el of layout.elements) {
+          if (
+            el.id === 'elem-hero-image' ||
+            el.type === 'image' ||
+            el.name?.toLowerCase().includes('hero')
+          ) {
+            el.imageUrl = newImg;
+            if (newPos) el.imagePosition = newPos;
+            if (newCrop) {
+              el.imageCrop = (newCrop === 'custom' ? 'cover' : newCrop) as 'cover' | 'contain' | 'fill';
+            }
+            changed = true;
+          }
+        }
+        if (changed) {
+          layout.updatedAt = new Date().toISOString();
+        }
+      };
+
+      syncHeroToLayout(this.data.landingPagePublished);
+      syncHeroToLayout(this.data.landingPageDraft);
+    }
+
     this.save();
     return this.data.settings;
   }
@@ -972,6 +1026,19 @@ class Database {
 
     this.data.landingPagePublished = publishedLayout;
     this.data.landingPageDraft = JSON.parse(JSON.stringify(publishedLayout));
+
+    // Also sync published hero image back to site settings
+    const heroEl = publishedLayout.elements.find((el) => el.id === 'elem-hero-image' || el.type === 'image');
+    if (heroEl && heroEl.imageUrl) {
+      this.data.settings.heroImage = heroEl.imageUrl;
+      if (heroEl.imagePosition) {
+        this.data.settings.heroImagePosition = heroEl.imagePosition;
+      }
+      if (heroEl.imageCrop) {
+        this.data.settings.heroImageCrop = (heroEl.imageCrop === 'fill' ? 'cover' : heroEl.imageCrop) as 'cover' | 'contain' | 'custom';
+      }
+    }
+
     if (!this.data.landingPageVersions) {
       this.data.landingPageVersions = [];
     }

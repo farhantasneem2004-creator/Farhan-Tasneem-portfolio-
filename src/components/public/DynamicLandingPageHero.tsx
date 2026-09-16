@@ -35,12 +35,20 @@ const HeroImageElement: React.FC<{
   props: any;
   settings?: SiteSettings;
 }> = ({ element, elemStyle, props, settings }) => {
-  const initialUrl = getOptimizedImageUrl(element.imageUrl || settings?.heroImage);
+  // If settings.heroImage is present, prioritize it for the hero image element so updates in admin reflect immediately
+  const getEffectiveImage = () => {
+    if (element.id === 'elem-hero-image' || element.type === 'image') {
+      return settings?.heroImage || element.imageUrl || DEFAULT_HERO_PORTRAIT;
+    }
+    return element.imageUrl || settings?.heroImage || DEFAULT_HERO_PORTRAIT;
+  };
+
+  const initialUrl = getOptimizedImageUrl(getEffectiveImage());
   const [imgSrc, setImgSrc] = useState<string>(initialUrl);
 
   useEffect(() => {
-    setImgSrc(getOptimizedImageUrl(element.imageUrl || settings?.heroImage));
-  }, [element.imageUrl, settings?.heroImage]);
+    setImgSrc(getOptimizedImageUrl(getEffectiveImage()));
+  }, [element.imageUrl, settings?.heroImage, element.id, element.type]);
 
   const handleImgError = () => {
     if (imgSrc !== DEFAULT_HERO_PORTRAIT) {
@@ -49,6 +57,14 @@ const HeroImageElement: React.FC<{
       setImgSrc('/images/farhan_hero_portrait_1789381757896.jpg');
     }
   };
+
+  const effectivePosition = (element.id === 'elem-hero-image' && settings?.heroImagePosition)
+    ? settings.heroImagePosition
+    : (element.imagePosition || 'center top');
+
+  const effectiveFit = (element.id === 'elem-hero-image' && settings?.heroImageCrop)
+    ? settings.heroImageCrop
+    : ((element.imageCrop as any) || 'cover');
 
   return (
     <div
@@ -70,8 +86,8 @@ const HeroImageElement: React.FC<{
         decoding="async"
         className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
         style={{
-          objectFit: (element.imageCrop as any) || 'cover',
-          objectPosition: element.imagePosition || 'center top'
+          objectFit: (effectiveFit as any) || 'cover',
+          objectPosition: effectivePosition
         }}
       />
       {/* Subtle bottom gradient for depth */}

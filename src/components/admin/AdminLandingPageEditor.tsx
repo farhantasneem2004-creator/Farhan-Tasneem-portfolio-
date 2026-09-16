@@ -35,13 +35,39 @@ import type {
   LandingPageVersion
 } from '../../types.js';
 import { api } from '../../api.js';
-import { Sparkles, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
+import {
+  Sparkles,
+  CheckCircle,
+  AlertCircle,
+  RefreshCw,
+  Maximize2,
+  Minimize2,
+  ZoomIn,
+  ZoomOut,
+  MoveUp,
+  MoveDown,
+  Copy,
+  Trash2,
+  Lock,
+  Unlock,
+  SlidersHorizontal,
+  Layers,
+  Hand,
+  MousePointer,
+  Eye
+} from 'lucide-react';
 
 interface AdminLandingPageEditorProps {
   settings: SiteSettings;
+  onLandingPagePublished?: (layout: LandingPageLayout) => void;
+  onSettingsUpdated?: (settings: SiteSettings) => void;
 }
 
-export const AdminLandingPageEditor: React.FC<AdminLandingPageEditorProps> = ({ settings }) => {
+export const AdminLandingPageEditor: React.FC<AdminLandingPageEditorProps> = ({
+  settings,
+  onLandingPagePublished,
+  onSettingsUpdated
+}) => {
   const accentColor = settings.accentColor || '#e5a93c';
 
   // Layout & History State
@@ -55,6 +81,10 @@ export const AdminLandingPageEditor: React.FC<AdminLandingPageEditorProps> = ({ 
   const [snapEnabled, setSnapEnabled] = useState<boolean>(true);
   const [isPreview, setIsPreview] = useState<boolean>(false);
   const [layersOpen, setLayersOpen] = useState<boolean>(true);
+  const [propertiesOpen, setPropertiesOpen] = useState<boolean>(true);
+  const [isZenMode, setIsZenMode] = useState<boolean>(false);
+  const [isPanMode, setIsPanMode] = useState<boolean>(false);
+  const [isSpacePressed, setIsSpacePressed] = useState<boolean>(false);
   const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
 
   // Status & Feedback
@@ -72,8 +102,18 @@ export const AdminLandingPageEditor: React.FC<AdminLandingPageEditorProps> = ({ 
   // Snap Guides
   const [activeGuides, setActiveGuides] = useState<SnapGuide[]>([]);
 
-  // Drag & Resize References
+  // Viewport, Canvas, Drag & Pan References
   const canvasRef = useRef<HTMLDivElement>(null);
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const panStartRef = useRef<{
+    isPanning: boolean;
+    startX: number;
+    startY: number;
+    scrollLeft: number;
+    scrollTop: number;
+    hasMoved: boolean;
+  } | null>(null);
+
   const dragRef = useRef<{
     isDragging: boolean;
     elementId: string;
@@ -97,6 +137,41 @@ export const AdminLandingPageEditor: React.FC<AdminLandingPageEditorProps> = ({ 
     origH: number;
   } | null>(null);
 
+  // Active canvas dimensions based on current breakpoint
+  const canvasWidth = breakpoint === 'desktop' ? 1440 : breakpoint === 'tablet' ? 768 : 390;
+  const canvasHeight =
+    breakpoint === 'desktop'
+      ? (layout.canvasHeightDesktop || 850)
+      : breakpoint === 'tablet'
+      ? (layout.canvasHeightTablet || 950)
+      : (layout.canvasHeightMobile || 1050);
+
+  // Fit to screen calculation - scales landing page completely inside available workspace
+  const fitToScreen = useCallback(() => {
+    if (!viewportRef.current) return;
+    const viewport = viewportRef.current;
+    const paddingX = 64;
+    const paddingY = 64;
+    const availableWidth = Math.max(viewport.clientWidth - paddingX, 200);
+    const availableHeight = Math.max(viewport.clientHeight - paddingY, 200);
+
+    const scaleX = availableWidth / canvasWidth;
+    const scaleY = availableHeight / canvasHeight;
+    const fitScale = Math.min(scaleX, scaleY);
+
+    // Support zoom levels from 25% to 200%
+    const targetZoom = Number(Math.min(Math.max(fitScale, 0.25), 2.0).toFixed(2));
+    setZoom(targetZoom);
+
+    // Center viewport scrolling
+    requestAnimationFrame(() => {
+      if (viewport) {
+        viewport.scrollLeft = Math.max(0, (viewport.scrollWidth - viewport.clientWidth) / 2);
+        viewport.scrollTop = 0;
+      }
+    });
+  }, [canvasWidth, canvasHeight]);
+
   // Load Draft on Mount
   useEffect(() => {
     loadDraft();
@@ -116,6 +191,123 @@ export const AdminLandingPageEditor: React.FC<AdminLandingPageEditorProps> = ({ 
       setLayout(defaultLandingPageLayout);
     } finally {
       setIsLoading(false);
+      // Automatically default to "Fit to Screen" after loading
+      setTimeout(fitToScreen, 100);
+    }
+  };
+
+  // Auto-fit on viewport resize (window resize or panel collapse/expand)
+  useEffect(() => {
+    if (!viewportRef.current) return;
+    const observer = new ResizeObserver(() => {
+      if (
+        !dragRef.current?.isDragging &&
+        !resizeRef.current?.isResizing &&
+        !panStartRef.current?.isPanning
+      ) {
+        fitToScreen();
+      }
+    });
+    observer.observe(viewportRef.current);
+    return () => observer.disconnect();
+  }, [fitToScreen]);
+
+  // Keyboard Shortcuts: Space for Pan, Ctrl+0 for Fit, Ctrl+1 for 100%, etc.
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) {
+        return;
+      }
+
+      if (e.code === 'Space' && !e.repeat) {
+        setIsSpacePressed(true);
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === '0') {
+        e.preventDefault();
+        fitToScreen();
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === '1') {
+        e.preventDefault();
+        setZoom(1);
+      }
+      if ((e.ctrlKey || e.metaKey) && (e.key === '=' || e.key === '+')) {
+        e.preventDefault();
+        setZoom((prev) => Math.min(2.0, Number((prev + 0.1).toFixed(2))));
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === '-') {
+        e.preventDefault();
+        setZoom((prev) => Math.max(0.25, Number((prev - 0.1).toFixed(2))));
+      }
+      if ((e.key === 'h' || e.key === 'H') && !e.ctrlKey && !e.metaKey) {
+        setIsPanMode((prev) => !prev);
+      }
+      if ((e.key === 'v' || e.key === 'V') && !e.ctrlKey && !e.metaKey) {
+        setIsPanMode(false);
+      }
+      if ((e.key === 'z' || e.key === 'Z') && !e.ctrlKey && !e.metaKey) {
+        setIsZenMode((prev) => !prev);
+        setTimeout(fitToScreen, 50);
+      }
+    };
+
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.code === 'Space') {
+        setIsSpacePressed(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, [fitToScreen]);
+
+  // Viewport Pan Mouse Handlers
+  const isPanActive = isPanMode || isSpacePressed;
+
+  const handleViewportMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    const isMiddleClick = e.button === 1;
+    const canPan = isMiddleClick || isPanActive;
+
+    if (canPan && viewportRef.current) {
+      e.preventDefault();
+      panStartRef.current = {
+        isPanning: true,
+        startX: e.clientX,
+        startY: e.clientY,
+        scrollLeft: viewportRef.current.scrollLeft,
+        scrollTop: viewportRef.current.scrollTop,
+        hasMoved: false
+      };
+    }
+  };
+
+  const handleViewportMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (panStartRef.current?.isPanning && viewportRef.current) {
+      const dx = e.clientX - panStartRef.current.startX;
+      const dy = e.clientY - panStartRef.current.startY;
+      viewportRef.current.scrollLeft = panStartRef.current.scrollLeft - dx;
+      viewportRef.current.scrollTop = panStartRef.current.scrollTop - dy;
+      panStartRef.current.hasMoved = true;
+    }
+  };
+
+  const handleViewportMouseUp = () => {
+    if (panStartRef.current?.isPanning) {
+      panStartRef.current = null;
+    }
+  };
+
+  const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    if (e.ctrlKey || e.metaKey) {
+      e.preventDefault();
+      const delta = e.deltaY > 0 ? -0.05 : 0.05;
+      setZoom((prev) => {
+        const next = Number((prev + delta).toFixed(2));
+        return Math.min(2.0, Math.max(0.25, next));
+      });
     }
   };
 
@@ -189,10 +381,17 @@ export const AdminLandingPageEditor: React.FC<AdminLandingPageEditorProps> = ({ 
   const handleConfirmPublish = async (versionName?: string) => {
     try {
       setIsPublishing(true);
-      await api.publishLandingPage(layout, versionName);
+      const res = await api.publishLandingPage(layout, versionName);
       setHasUnsavedChanges(false);
       setIsPublishModalOpen(false);
       showToast('Landing page published live to public visitors!', 'success');
+      if (res?.published) {
+        onLandingPagePublished?.(res.published);
+      }
+      const freshSettings = await api.getSettings().catch(() => null);
+      if (freshSettings) {
+        onSettingsUpdated?.(freshSettings);
+      }
     } catch (err: any) {
       showToast(err.message || 'Failed to publish changes', 'error');
     } finally {
@@ -565,15 +764,6 @@ export const AdminLandingPageEditor: React.FC<AdminLandingPageEditorProps> = ({ 
   // Selected element reference
   const selectedElement = layout.elements.find((el) => el.id === selectedElementId) || null;
 
-  // Active canvas dimensions
-  const canvasWidth = breakpoint === 'desktop' ? 1440 : breakpoint === 'tablet' ? 768 : 390;
-  const canvasHeight =
-    breakpoint === 'desktop'
-      ? layout.canvasHeightDesktop
-      : breakpoint === 'tablet'
-      ? layout.canvasHeightTablet
-      : layout.canvasHeightMobile;
-
   if (isLoading) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center bg-[#090b0f] text-white p-12 min-h-[500px]">
@@ -593,13 +783,36 @@ export const AdminLandingPageEditor: React.FC<AdminLandingPageEditorProps> = ({ 
         onUndo={handleUndo}
         onRedo={handleRedo}
         breakpoint={breakpoint}
-        onBreakpointChange={(bp) => setBreakpoint(bp)}
+        onBreakpointChange={(bp) => {
+          setBreakpoint(bp);
+          setTimeout(fitToScreen, 50);
+        }}
         zoom={zoom}
         onZoomChange={(z) => setZoom(z)}
+        onFitToScreen={fitToScreen}
         snapEnabled={snapEnabled}
         onToggleSnap={() => setSnapEnabled(!snapEnabled)}
         isPreview={isPreview}
         onTogglePreview={() => setIsPreview(!isPreview)}
+        layersOpen={layersOpen && !isZenMode}
+        onToggleLayers={() => {
+          if (isZenMode) setIsZenMode(false);
+          setLayersOpen(!layersOpen);
+          setTimeout(fitToScreen, 50);
+        }}
+        propertiesOpen={propertiesOpen && !isZenMode}
+        onToggleProperties={() => {
+          if (isZenMode) setIsZenMode(false);
+          setPropertiesOpen(!propertiesOpen);
+          setTimeout(fitToScreen, 50);
+        }}
+        isZenMode={isZenMode}
+        onToggleZenMode={() => {
+          setIsZenMode(!isZenMode);
+          setTimeout(fitToScreen, 50);
+        }}
+        isPanMode={isPanMode}
+        onTogglePanMode={() => setIsPanMode(!isPanMode)}
         onAddElement={() => setIsAddModalOpen(true)}
         onOpenVersions={() => setIsVersionsModalOpen(true)}
         onResetLayout={handleResetLayout}
@@ -615,13 +828,16 @@ export const AdminLandingPageEditor: React.FC<AdminLandingPageEditorProps> = ({ 
       <div className="flex-1 flex overflow-hidden relative">
         
         {/* Left: Layers Panel */}
-        {!isPreview && (
+        {!isPreview && !isZenMode && (
           <LayersPanel
             elements={layout.elements}
             selectedElementId={selectedElementId}
             breakpoint={breakpoint}
             isOpen={layersOpen}
-            onToggleOpen={() => setLayersOpen(!layersOpen)}
+            onToggleOpen={() => {
+              setLayersOpen(!layersOpen);
+              setTimeout(fitToScreen, 50);
+            }}
             onSelectElement={(id) => setSelectedElementId(id)}
             onUpdateElement={handleUpdateElement}
             onDeleteElement={handleDeleteElement}
@@ -630,88 +846,150 @@ export const AdminLandingPageEditor: React.FC<AdminLandingPageEditorProps> = ({ 
           />
         )}
 
-        {/* Center: Scrollable & Zoomable Canvas Viewport */}
+        {/* Center: Flexible Viewport with Centered, Scaled Canvas */}
         <div
-          onClick={() => setSelectedElementId(null)}
-          className="flex-1 overflow-auto bg-[#07080b] flex items-center justify-center p-8 relative"
+          ref={viewportRef}
+          onMouseDown={handleViewportMouseDown}
+          onMouseMove={handleViewportMouseMove}
+          onMouseUp={handleViewportMouseUp}
+          onWheel={handleWheel}
+          onClick={(e) => {
+            if (!panStartRef.current?.hasMoved && e.target === viewportRef.current) {
+              setSelectedElementId(null);
+            }
+          }}
+          className={`flex-1 overflow-auto bg-[#07080b] relative select-none ${
+            isPanActive
+              ? panStartRef.current?.isPanning
+                ? 'cursor-grabbing'
+                : 'cursor-grab'
+              : 'cursor-default'
+          }`}
           style={{
             backgroundImage:
-              'radial-gradient(circle at 1px 1px, #1c2230 1px, transparent 0)',
+              'radial-gradient(circle at 1px 1px, #1a202c 1px, transparent 0)',
             backgroundSize: '24px 24px'
           }}
         >
-          {/* Scaled Canvas Container */}
+          {/* Centering Wrapper with flex and min-size */}
           <div
-            ref={canvasRef}
-            id="landing-page-hero-canvas"
-            onClick={(e) => e.stopPropagation()}
+            className="min-w-full min-h-full flex items-center justify-center p-8 sm:p-12"
             style={{
-              width: `${canvasWidth}px`,
-              height: `${canvasHeight}px`,
-              transform: `scale(${zoom})`,
-              transformOrigin: 'top center',
-              backgroundColor: layout.backgroundColor || '#0c0e12',
-              transition: dragRef.current?.isDragging ? 'none' : 'transform 0.15s ease'
+              width: 'max-content',
+              height: 'max-content'
             }}
-            className="relative shadow-2xl rounded-2xl overflow-hidden border border-[#202737] shrink-0"
           >
-            {/* Background Subtle Gradient Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#0c0e12]/40 to-[#0c0e12] pointer-events-none" />
-
-            {/* Render Visual Elements */}
-            {layout.elements.map((element) => (
-              <CanvasElement
-                key={element.id}
-                element={element}
-                isSelected={selectedElementId === element.id}
-                isPreview={isPreview}
-                breakpoint={breakpoint}
-                zoom={zoom}
-                onSelect={(id) => setSelectedElementId(id)}
-                onStartDrag={handleStartDrag}
-                onStartResize={handleStartResize}
-                accentColor={accentColor}
-              />
-            ))}
-
-            {/* Magnetic Snap Guides Visual Overlay */}
-            {activeGuides.map((guide, idx) => (
+            {/* Scaled Bounding Box guaranteeing exact scroll boundaries without clipping */}
+            <div
+              style={{
+                width: `${canvasWidth * zoom}px`,
+                height: `${canvasHeight * zoom}px`,
+                position: 'relative',
+                margin: 'auto'
+              }}
+            >
+              {/* Scaled Canvas Container */}
               <div
-                key={idx}
-                className="absolute pointer-events-none z-50 shadow-sm"
-                style={
-                  guide.type === 'vertical'
-                    ? {
-                        left: `${guide.position}px`,
-                        top: 0,
-                        bottom: 0,
-                        width: '1px',
-                        backgroundColor: '#f59e0b'
-                      }
-                    : {
-                        top: `${guide.position}px`,
-                        left: 0,
-                        right: 0,
-                        height: '1px',
-                        backgroundColor: '#f59e0b'
-                      }
-                }
-              />
-            ))}
+                ref={canvasRef}
+                id="landing-page-hero-canvas"
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                  width: `${canvasWidth}px`,
+                  height: `${canvasHeight}px`,
+                  transform: `scale(${zoom})`,
+                  transformOrigin: 'top left',
+                  backgroundColor: layout.backgroundColor || '#0c0e12',
+                  transition:
+                    dragRef.current?.isDragging ||
+                    resizeRef.current?.isResizing ||
+                    panStartRef.current?.isPanning
+                      ? 'none'
+                      : 'transform 0.15s ease'
+                }}
+                className="relative shadow-2xl rounded-2xl overflow-hidden border border-[#202737] shrink-0"
+              >
+                {/* Background Subtle Gradient Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#0c0e12]/40 to-[#0c0e12] pointer-events-none" />
 
-            {/* Breakpoint Badge in bottom right corner */}
-            <div className="absolute bottom-3 right-3 px-2.5 py-1 rounded-md bg-[#000000]/80 text-[#9ca3af] text-[10px] font-mono border border-[#242b3b] pointer-events-none z-40">
-              {breakpoint.toUpperCase()} • {canvasWidth}×{canvasHeight}px
+                {/* Render Visual Elements */}
+                {layout.elements.map((element) => (
+                  <CanvasElement
+                    key={element.id}
+                    element={element}
+                    isSelected={selectedElementId === element.id}
+                    isPreview={isPreview}
+                    breakpoint={breakpoint}
+                    zoom={zoom}
+                    onSelect={(id) => setSelectedElementId(id)}
+                    onStartDrag={handleStartDrag}
+                    onStartResize={handleStartResize}
+                    accentColor={accentColor}
+                  />
+                ))}
+
+                {/* Magnetic Snap Guides Visual Overlay */}
+                {activeGuides.map((guide, idx) => (
+                  <div
+                    key={idx}
+                    className="absolute pointer-events-none z-50 shadow-sm"
+                    style={
+                      guide.type === 'vertical'
+                        ? {
+                            left: `${guide.position}px`,
+                            top: 0,
+                            bottom: 0,
+                            width: '1px',
+                            backgroundColor: '#f59e0b'
+                          }
+                        : {
+                            top: `${guide.position}px`,
+                            left: 0,
+                            right: 0,
+                            height: '1px',
+                            backgroundColor: '#f59e0b'
+                          }
+                    }
+                  />
+                ))}
+
+                {/* Breakpoint Badge in bottom right corner */}
+                <div className="absolute bottom-3 right-3 px-2.5 py-1 rounded-md bg-[#000000]/80 text-[#9ca3af] text-[10px] font-mono border border-[#242b3b] pointer-events-none z-40">
+                  {breakpoint.toUpperCase()} • {canvasWidth}×{canvasHeight}px
+                </div>
+              </div>
             </div>
           </div>
+
+          {/* Zen Focus Mode Floating Pill */}
+          {isZenMode && (
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#121620]/90 backdrop-blur border border-amber-500/30 text-amber-300 text-xs shadow-xl animate-fade-in">
+              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+              <span>Canvas Focus Mode Active</span>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsZenMode(false);
+                  setTimeout(fitToScreen, 50);
+                }}
+                className="ml-2 px-2.5 py-0.5 rounded bg-amber-500 text-black font-semibold hover:bg-amber-400 transition-colors text-[11px]"
+              >
+                Exit Focus
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Right: Properties Inspector Panel */}
-        {!isPreview && (
+        {!isPreview && !isZenMode && (
           <PropertiesPanel
             selectedElement={selectedElement}
             layout={layout}
             breakpoint={breakpoint}
+            isOpen={propertiesOpen}
+            onToggleOpen={() => {
+              setPropertiesOpen(!propertiesOpen);
+              setTimeout(fitToScreen, 50);
+            }}
             onUpdateElement={handleUpdateElement}
             onDeleteElement={handleDeleteElement}
             onDuplicateElement={handleDuplicateElement}
