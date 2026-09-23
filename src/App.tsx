@@ -94,8 +94,19 @@ export default function App() {
 
       // Check if already authenticated
       if (api.isAuthenticated()) {
-        setIsAuthenticated(true);
-        loadAdminData();
+        const user = await api.checkAuth();
+        if (user) {
+          setIsAuthenticated(true);
+          await loadAdminData();
+        } else {
+          setIsAuthenticated(false);
+          setContactMessages([]);
+          setCvVersions([]);
+        }
+      } else {
+        setIsAuthenticated(false);
+        setContactMessages([]);
+        setCvVersions([]);
       }
     } catch (err) {
       console.error('Failed to load portfolio database:', err);
@@ -111,10 +122,12 @@ export default function App() {
         api.getContactMessages().catch(() => []),
         api.getCVVersions().catch(() => [])
       ]);
-      setContactMessages(msgs);
-      setCvVersions(versions);
+      setContactMessages(Array.isArray(msgs) ? msgs : []);
+      setCvVersions(Array.isArray(versions) ? versions : []);
     } catch (err) {
       console.error('Failed to load admin dataset:', err);
+      setContactMessages([]);
+      setCvVersions([]);
     }
   };
 
@@ -176,12 +189,17 @@ export default function App() {
   const handleLogout = () => {
     api.logout();
     setIsAuthenticated(false);
+    setContactMessages([]);
+    setCvVersions([]);
     setView('public');
     window.location.hash = '';
   };
 
   const handleDownloadCV = () => {
-    window.open('/api/admin/cv/export/pdf', '_blank');
+    api.downloadPublicCvPdf().catch((err) => {
+      console.warn('Direct blob download failed, trying fallback:', err);
+      window.open('/api/cv-export/pdf', '_blank');
+    });
   };
 
   const accentColor = settings?.accentColor || '#e5a93c';
@@ -224,7 +242,9 @@ export default function App() {
       );
     }
 
-    const unreadMessagesCount = contactMessages.filter((m) => !m.read).length;
+    const unreadMessagesCount = Array.isArray(contactMessages)
+      ? contactMessages.filter((m) => !m.read).length
+      : 0;
 
     return (
       <AdminLayout
@@ -247,7 +267,7 @@ export default function App() {
             certifications={certifications}
             services={services}
             galleryImages={galleryImages}
-            messages={contactMessages}
+            messages={Array.isArray(contactMessages) ? contactMessages : []}
             onNavigate={(tab) => setAdminTab(tab as AdminTab)}
             accentColor={accentColor}
           />
@@ -355,7 +375,7 @@ export default function App() {
 
         {adminTab === 'messages' && (
           <AdminMessagesManager
-            messages={contactMessages}
+            messages={Array.isArray(contactMessages) ? contactMessages : []}
             onMessagesUpdated={loadAdminData}
             accentColor={accentColor}
           />

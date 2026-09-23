@@ -16,6 +16,14 @@ import type { ContactMessage } from '../../types.js';
 interface AdminDashboardOverviewProps {
   stats?: AdminStats | null;
   recentMessages?: ContactMessage[];
+  messages?: ContactMessage[];
+  skills?: any[];
+  projects?: any[];
+  experiences?: any[];
+  certifications?: any[];
+  services?: any[];
+  galleryImages?: any[];
+  settings?: any;
   onNavigate: (tab: any) => void;
   accentColor?: string;
   onMarkMessageRead?: (id: string) => void;
@@ -23,37 +31,44 @@ interface AdminDashboardOverviewProps {
 
 export const AdminDashboardOverview: React.FC<AdminDashboardOverviewProps> = ({
   stats,
-  recentMessages = [],
+  recentMessages,
+  messages,
+  skills = [],
+  projects = [],
+  galleryImages = [],
   onNavigate,
   accentColor = '#e5a93c',
   onMarkMessageRead
 }) => {
+  const safeMessages = Array.isArray(messages) ? messages : (Array.isArray(recentMessages) ? recentMessages : []);
+  const unreadCount = safeMessages.filter((m) => !m.read).length;
+
   const statCards = [
     {
       title: 'Projects',
-      count: stats?.projectsCount ?? 0,
+      count: stats?.projectsCount ?? (Array.isArray(projects) ? projects.length : 0),
       icon: <FolderGit2 className="w-5 h-5 text-sky-400" />,
       tab: 'projects',
       desc: 'Engineering case studies'
     },
     {
       title: 'Skills & Tools',
-      count: stats?.skillsCount ?? 0,
+      count: stats?.skillsCount ?? (Array.isArray(skills) ? skills.length : 0),
       icon: <Wrench className="w-5 h-5 text-amber-400" />,
       tab: 'skills',
       desc: 'Competency matrix items'
     },
     {
       title: 'Gallery Photos',
-      count: stats?.galleryImagesCount ?? 0,
+      count: stats?.galleryImagesCount ?? (Array.isArray(galleryImages) ? galleryImages.length : 0),
       icon: <Camera className="w-5 h-5 text-emerald-400" />,
       tab: 'gallery',
       desc: 'Visual journal records'
     },
     {
       title: 'Inquiries',
-      count: stats?.unreadMessagesCount ?? 0,
-      total: stats?.totalMessagesCount ?? 0,
+      count: stats?.unreadMessagesCount ?? unreadCount,
+      total: stats?.totalMessagesCount ?? safeMessages.length,
       icon: <Mail className="w-5 h-5 text-rose-400" />,
       tab: 'messages',
       desc: 'Unread client notes'
@@ -167,13 +182,13 @@ export const AdminDashboardOverview: React.FC<AdminDashboardOverviewProps> = ({
           </button>
         </div>
 
-        {(!recentMessages || recentMessages.length === 0) ? (
+        {(!safeMessages || safeMessages.length === 0) ? (
           <div className="text-center py-8 text-xs text-[#6b7280]">
             No messages received yet.
           </div>
         ) : (
           <div className="divide-y divide-[#1c2230]">
-            {(recentMessages || []).slice(0, 5).map((msg) => (
+            {safeMessages.slice(0, 5).map((msg) => (
               <div key={msg.id} className="py-3.5 flex items-start justify-between gap-4">
                 <div>
                   <div className="flex items-center gap-2 mb-1">

@@ -440,8 +440,19 @@ export const api = {
 
   // Messages
   async getMessages(): Promise<ContactMessage[]> {
-    const res = await fetch('/api/admin/messages', { headers: getAuthHeaders() });
-    return res.json();
+    try {
+      const res = await fetch('/api/admin/messages', { headers: getAuthHeaders() });
+      if (!res.ok) {
+        if (res.status === 401 || res.status === 403) {
+          authStorage.clearToken();
+        }
+        return [];
+      }
+      const data = await res.json();
+      return Array.isArray(data) ? data : [];
+    } catch {
+      return [];
+    }
   },
   async getContactMessages(): Promise<ContactMessage[]> {
     return this.getMessages();
@@ -466,8 +477,19 @@ export const api = {
 
   // CV Versions
   async getCVVersions(): Promise<CVVersion[]> {
-    const res = await fetch('/api/admin/cv-versions', { headers: getAuthHeaders() });
-    return res.json();
+    try {
+      const res = await fetch('/api/admin/cv-versions', { headers: getAuthHeaders() });
+      if (!res.ok) {
+        if (res.status === 401 || res.status === 403) {
+          authStorage.clearToken();
+        }
+        return [];
+      }
+      const data = await res.json();
+      return Array.isArray(data) ? data : [];
+    } catch {
+      return [];
+    }
   },
   async createCVVersion(ver: Omit<CVVersion, 'id'>): Promise<CVVersion> {
     const res = await fetch('/api/admin/cv-versions', {
@@ -492,6 +514,104 @@ export const api = {
     });
     const data = await res.json();
     return data.success;
+  },
+
+  async downloadCvPdf(options?: any, customFilename?: string): Promise<void> {
+    const res = await fetch('/api/admin/cv/export/pdf', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders()
+      },
+      body: JSON.stringify(options || {})
+    });
+    if (!res.ok) throw new Error('Failed to download CV PDF');
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = customFilename || 'Farhan-Tasneem-CV.pdf';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  },
+
+  async downloadCvDocx(options?: any, customFilename?: string): Promise<void> {
+    const res = await fetch('/api/admin/cv/export/docx', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders()
+      },
+      body: JSON.stringify(options || {})
+    });
+    if (!res.ok) throw new Error('Failed to download CV DOCX');
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = customFilename || 'Farhan-Tasneem-CV.docx';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  },
+
+  async downloadCvVersionPdf(versionId: string, customFilename?: string): Promise<void> {
+    const res = await fetch(`/api/admin/cv-versions/${versionId}/export/pdf`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders()
+      },
+      body: JSON.stringify({ versionId })
+    });
+    if (!res.ok) throw new Error('Failed to download CV version PDF');
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = customFilename || `Farhan-Tasneem-CV-${versionId}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  },
+
+  async downloadCvVersionDocx(versionId: string, customFilename?: string): Promise<void> {
+    const res = await fetch(`/api/admin/cv-versions/${versionId}/export/docx`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders()
+      },
+      body: JSON.stringify({ versionId })
+    });
+    if (!res.ok) throw new Error('Failed to download CV version DOCX');
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = customFilename || `Farhan-Tasneem-CV-${versionId}.docx`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  },
+
+  async downloadPublicCvPdf(): Promise<void> {
+    const res = await fetch('/api/cv-export/pdf');
+    if (!res.ok) throw new Error('Failed to download CV');
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'Farhan-Tasneem-CV.pdf';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
   },
 
   // Upload File

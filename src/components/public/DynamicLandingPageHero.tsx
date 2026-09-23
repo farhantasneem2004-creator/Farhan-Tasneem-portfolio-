@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import type { LandingPageLayout, LandingPageElement, Breakpoint, SiteSettings } from '../../types.js';
 import { getOptimizedImageUrl, DEFAULT_HERO_PORTRAIT } from '../../utils/imageHelper.js';
+import { api } from '../../api.js';
 
 interface DynamicLandingPageHeroProps {
   layout: LandingPageLayout;
@@ -53,8 +54,10 @@ const HeroImageElement: React.FC<{
   const handleImgError = () => {
     if (imgSrc !== DEFAULT_HERO_PORTRAIT) {
       setImgSrc(DEFAULT_HERO_PORTRAIT);
-    } else if (imgSrc !== '/images/farhan_hero_portrait_1789381757896.jpg') {
-      setImgSrc('/images/farhan_hero_portrait_1789381757896.jpg');
+    } else if (imgSrc !== '/images/hero/farhan-hero.jpg') {
+      setImgSrc('/images/hero/farhan-hero.jpg');
+    } else if (imgSrc !== '/farhan_hero_portrait.jpg') {
+      setImgSrc('/farhan_hero_portrait.jpg');
     }
   };
 
@@ -183,7 +186,9 @@ export const DynamicLandingPageHero: React.FC<DynamicLandingPageHeroProps> = ({
       case 'download_cv':
         if (onDownloadCv) onDownloadCv();
         else {
-          window.open('/api/cv-export/pdf', '_blank');
+          api.downloadPublicCvPdf().catch(() => {
+            window.open('/api/cv-export/pdf', '_blank');
+          });
         }
         break;
       case 'contact': {

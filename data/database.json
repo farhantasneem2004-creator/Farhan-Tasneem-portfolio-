@@ -9,7 +9,7 @@
     "heroHeadingAccent": "TASNEEM",
     "heroSubtitle": "Computer Science & Engineering Student",
     "heroDescription": "Motivated Computer Science and Engineering student at Daffodil International University with a strong academic background, passion for artificial intelligence, prompt engineering, and software development.",
-    "heroImage": "/uploads/60608_1789489485375.jpg",
+    "heroImage": "/images/hero/farhan-hero.png",
     "heroImageCrop": "cover",
     "heroImagePosition": "center",
     "heroImageStyle": "editorial",
@@ -1031,7 +1031,7 @@
         "id": "elem-hero-image",
         "name": "Hero Profile Image",
         "type": "image",
-        "imageUrl": "/uploads/60608_1789489485375.jpg",
+        "imageUrl": "/images/hero/farhan-hero.png",
         "imageAlt": "Farhan Tasneem - CSE Student & Developer",
         "imageCrop": "cover",
         "imagePosition": "center top",
@@ -1394,7 +1394,8 @@
           "opacity": 1,
           "rotation": 0,
           "zIndex": 9
-        }
+        },
+        "imageUrl": "/images/hero/farhan-hero.png"
       },
       {
         "id": "elem-feature-strip",
@@ -1744,7 +1745,7 @@
         "id": "elem-hero-image",
         "name": "Hero Profile Image",
         "type": "image",
-        "imageUrl": "/uploads/60608_1789489485375.jpg",
+        "imageUrl": "/images/hero/farhan-hero.png",
         "imageAlt": "Farhan Tasneem - CSE Student & Developer",
         "imageCrop": "cover",
         "imagePosition": "center top",
@@ -2107,7 +2108,8 @@
           "opacity": 1,
           "rotation": 0,
           "zIndex": 9
-        }
+        },
+        "imageUrl": "/images/hero/farhan-hero.png"
       },
       {
         "id": "elem-feature-strip",
@@ -2465,7 +2467,7 @@
             "id": "elem-hero-image",
             "name": "Hero Profile Image",
             "type": "image",
-            "imageUrl": "/farhan_hero_portrait.jpg",
+            "imageUrl": "/images/hero/farhan-hero.png",
             "imageAlt": "Farhan Tasneem - CSE Student & Developer",
             "imageCrop": "cover",
             "imagePosition": "center top",
@@ -2828,7 +2830,8 @@
               "opacity": 1,
               "rotation": 0,
               "zIndex": 9
-            }
+            },
+            "imageUrl": "/images/hero/farhan-hero.png"
           },
           {
             "id": "elem-feature-strip",

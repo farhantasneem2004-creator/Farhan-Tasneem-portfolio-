@@ -216,6 +216,15 @@ export interface CVVersion {
   photoPosition?: 'header-right' | 'header-left' | 'sidebar';
   accentColor?: string;
   fontFamily?: 'sans' | 'serif' | 'mono';
+  contactInfo?: {
+    name?: string;
+    email?: string;
+    phone?: string;
+    location?: string;
+    github?: string;
+    linkedin?: string;
+    website?: string;
+  };
   sections: {
     profilePicture: boolean;
     about: boolean;
@@ -229,6 +238,11 @@ export interface CVVersion {
     socialLinks: boolean;
   };
   sectionOrder: string[];
+  selectedProjectIds?: string[];
+  selectedExperienceIds?: string[];
+  selectedSkillIds?: string[];
+  selectedEducationIds?: string[];
+  selectedCertificationIds?: string[];
   customTitle?: string;
   customSummary?: string;
   isDefault?: boolean;

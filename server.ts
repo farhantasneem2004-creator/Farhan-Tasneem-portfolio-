@@ -22,8 +22,13 @@ async function startServer() {
 
   // Serve public static assets (images, fonts, portraits)
   const publicPath = path.join(process.cwd(), 'public');
-  app.use(express.static(publicPath));
-  app.use('/images', express.static(path.join(publicPath, 'images')));
+  const staticCacheOptions = {
+    setHeaders: (res: express.Response) => {
+      res.setHeader('Cache-Control', 'no-cache, must-revalidate');
+    }
+  };
+  app.use(express.static(publicPath, staticCacheOptions));
+  app.use('/images', express.static(path.join(publicPath, 'images'), staticCacheOptions));
 
   // Mount API routes FIRST
   app.use('/api', apiRouter);
@@ -43,10 +48,10 @@ async function startServer() {
   } else {
     const distPath = path.join(process.cwd(), 'dist');
     // Ensure static assets within dist take precedence
-    app.use(express.static(distPath));
-    app.use('/uploads', express.static(path.join(distPath, 'uploads')));
-    app.use('/images', express.static(path.join(distPath, 'images')));
-    app.use('/src/assets', express.static(path.join(distPath, 'src', 'assets')));
+    app.use(express.static(distPath, staticCacheOptions));
+    app.use('/uploads', express.static(path.join(distPath, 'uploads'), staticCacheOptions));
+    app.use('/images', express.static(path.join(distPath, 'images'), staticCacheOptions));
+    app.use('/src/assets', express.static(path.join(distPath, 'src', 'assets'), staticCacheOptions));
     app.get('*', (req, res) => {
       res.sendFile(path.join(distPath, 'index.html'));
     });

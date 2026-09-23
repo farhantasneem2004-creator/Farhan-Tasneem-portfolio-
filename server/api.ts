@@ -433,6 +433,12 @@ router.get('/admin/cv-versions', requireAuth, (req: Request, res: Response) => {
   res.json(db.getCVVersions());
 });
 
+router.get('/admin/cv-versions/:id', requireAuth, (req: Request, res: Response) => {
+  const version = db.getCVVersion(req.params.id);
+  if (!version) return res.status(404).json({ error: 'CV Version not found' });
+  res.json(version);
+});
+
 router.post('/admin/cv-versions', requireAuth, (req: Request, res: Response) => {
   const created = db.addCVVersion(req.body);
   res.status(201).json(created);
@@ -482,6 +488,9 @@ router.post('/upload', requireAuth, upload.single('file'), (req: Request, res: R
 
 function parseCvOptions(req: Request): CvExportOptions {
   const source = { ...(req.query || {}), ...(req.body || {}) };
+  const targetId = req.params?.id || source.versionId;
+  const storedVer = targetId ? db.getCVVersion(String(targetId)) : (!source.cvType ? db.getDefaultCVVersion() : undefined);
+
   let sections: any = undefined;
   if (typeof source.sections === 'string') {
     try {
@@ -491,6 +500,16 @@ function parseCvOptions(req: Request): CvExportOptions {
     }
   } else if (typeof source.sections === 'object') {
     sections = source.sections;
+  } else if (storedVer && storedVer.sections) {
+    sections = {
+      summary: storedVer.sections.about ?? true,
+      education: storedVer.sections.education ?? true,
+      skills: storedVer.sections.skills ?? true,
+      projects: storedVer.sections.projects ?? true,
+      experience: storedVer.sections.experience ?? true,
+      certifications: storedVer.sections.certifications ?? true,
+      services: storedVer.sections.services ?? true
+    };
   }
 
   let sectionOrder: string[] | undefined = undefined;
@@ -502,28 +521,65 @@ function parseCvOptions(req: Request): CvExportOptions {
     }
   } else if (Array.isArray(source.sectionOrder)) {
     sectionOrder = source.sectionOrder;
+  } else if (storedVer && storedVer.sectionOrder) {
+    sectionOrder = storedVer.sectionOrder;
   }
 
-  const cvType = (source.cvType as any) || 'professional';
-  const includePhoto =
-    source.includePhoto === true ||
-    source.includePhoto === 'true' ||
-    source.includePhoto === '1' ||
-    (source.includePhoto === undefined && (cvType === 'creative' || cvType === 'professional'));
+  const cvType = (source.cvType as any) || storedVer?.cvType || 'professional';
+  let includePhoto: boolean;
+  if (source.includePhoto !== undefined) {
+    includePhoto = source.includePhoto === true || source.includePhoto === 'true' || source.includePhoto === '1';
+  } else if (storedVer) {
+    includePhoto = storedVer.sections?.profilePicture ?? (cvType === 'creative' || cvType === 'professional');
+  } else {
+    includePhoto = cvType === 'creative' || cvType === 'professional';
+  }
+
+  const parseArray = (val: any): string[] | undefined => {
+    if (Array.isArray(val)) return val;
+    if (typeof val === 'string') {
+      try {
+        const parsed = JSON.parse(val);
+        if (Array.isArray(parsed)) return parsed;
+      } catch {
+        return val.split(',').map((s) => s.trim()).filter(Boolean);
+      }
+    }
+    return undefined;
+  };
+
+  let contactInfo: any = undefined;
+  if (typeof source.contactInfo === 'string') {
+    try {
+      contactInfo = JSON.parse(source.contactInfo);
+    } catch {
+      // ignore
+    }
+  } else if (typeof source.contactInfo === 'object') {
+    contactInfo = source.contactInfo;
+  }
 
   return {
+    versionId: storedVer?.id || source.versionId,
+    versionName: source.versionName || storedVer?.title,
     cvType,
-    template: (source.template as any) || 'modern',
-    length: (source.length as any) || 'one-page',
+    template: (source.template as any) || storedVer?.template || 'modern',
+    length: (source.length as any) || storedVer?.length || 'one-page',
     includePhoto,
-    photoUrl: source.photoUrl,
-    photoShape: source.photoShape,
-    photoPosition: source.photoPosition,
-    accentColor: source.accentColor,
-    customTitle: source.customTitle,
-    customSummary: source.customSummary,
+    photoUrl: source.photoUrl || (storedVer as any)?.photoUrl,
+    photoShape: source.photoShape || (storedVer as any)?.photoShape || 'rounded',
+    photoPosition: source.photoPosition || (storedVer as any)?.photoPosition || 'header-right',
+    accentColor: source.accentColor || storedVer?.accentColor,
+    customTitle: source.customTitle || (storedVer as any)?.customTitle,
+    customSummary: source.customSummary || (storedVer as any)?.customSummary,
+    contactInfo,
     sections,
-    sectionOrder
+    sectionOrder,
+    selectedProjectIds: parseArray(source.selectedProjectIds) || (storedVer as any)?.selectedProjectIds,
+    selectedExperienceIds: parseArray(source.selectedExperienceIds) || (storedVer as any)?.selectedExperienceIds,
+    selectedSkillIds: parseArray(source.selectedSkillIds) || (storedVer as any)?.selectedSkillIds,
+    selectedEducationIds: parseArray(source.selectedEducationIds) || (storedVer as any)?.selectedEducationIds,
+    selectedCertificationIds: parseArray(source.selectedCertificationIds) || (storedVer as any)?.selectedCertificationIds
   };
 }
 
@@ -531,8 +587,10 @@ const handlePdfExport = (req: Request, res: Response) => {
   try {
     const options = parseCvOptions(req);
     const pdfBuffer = generateCvPdf(options);
-    const safeType = (options.cvType || 'Curriculum').replace(/[^a-zA-Z0-9_-]/g, '');
-    const safeName = `Farhan-Tasneem-${safeType}-CV.pdf`;
+    const rawName = options.versionName
+      ? `Farhan-Tasneem-${options.versionName}`
+      : `Farhan-Tasneem-${options.cvType || 'Curriculum'}-CV`;
+    const safeName = `${rawName.replace(/[^a-zA-Z0-9_-]/g, '-').replace(/-+/g, '-')}.pdf`;
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="${safeName}"`);
@@ -547,8 +605,10 @@ const handleDocxExport = async (req: Request, res: Response) => {
   try {
     const options = parseCvOptions(req);
     const docxBuffer = await generateCvDocx(options);
-    const safeType = (options.cvType || 'Curriculum').replace(/[^a-zA-Z0-9_-]/g, '');
-    const safeName = `Farhan-Tasneem-${safeType}-CV.docx`;
+    const rawName = options.versionName
+      ? `Farhan-Tasneem-${options.versionName}`
+      : `Farhan-Tasneem-${options.cvType || 'Curriculum'}-CV`;
+    const safeName = `${rawName.replace(/[^a-zA-Z0-9_-]/g, '-').replace(/-+/g, '-')}.docx`;
 
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
     res.setHeader('Content-Disposition', `attachment; filename="${safeName}"`);
@@ -559,17 +619,21 @@ const handleDocxExport = async (req: Request, res: Response) => {
   }
 };
 
-// PDF routes (both public and admin paths, GET and POST)
+// PDF routes (public, admin, and direct version exports; GET and POST)
 router.get('/cv-export/pdf', handlePdfExport);
 router.post('/cv-export/pdf', handlePdfExport);
 router.get('/admin/cv/export/pdf', handlePdfExport);
 router.post('/admin/cv/export/pdf', handlePdfExport);
+router.get('/admin/cv-versions/:id/export/pdf', handlePdfExport);
+router.post('/admin/cv-versions/:id/export/pdf', handlePdfExport);
 
-// DOCX routes (both public and admin paths, GET and POST)
+// DOCX routes (public, admin, and direct version exports; GET and POST)
 router.get('/cv-export/docx', handleDocxExport);
 router.post('/cv-export/docx', handleDocxExport);
 router.get('/admin/cv/export/docx', handleDocxExport);
 router.post('/admin/cv/export/docx', handleDocxExport);
+router.get('/admin/cv-versions/:id/export/docx', handleDocxExport);
+router.post('/admin/cv-versions/:id/export/docx', handleDocxExport);
 
 // ==========================================
 // 5. VISUAL LANDING PAGE EDITOR API

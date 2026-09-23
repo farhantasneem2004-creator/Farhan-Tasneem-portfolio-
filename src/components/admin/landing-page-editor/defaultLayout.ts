@@ -1,6 +1,6 @@
 import type { LandingPageLayout, LandingPageElement } from '../../../types.js';
 
-export const DEFAULT_HERO_IMAGE = '/farhan_hero_portrait.jpg';
+export const DEFAULT_HERO_IMAGE = '/images/hero/farhan-hero.png';
 
 export const createDefaultLandingPageElements = (): LandingPageElement[] => [
   {

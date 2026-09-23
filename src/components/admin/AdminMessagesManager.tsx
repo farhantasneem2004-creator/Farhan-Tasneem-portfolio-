@@ -15,6 +15,7 @@ export const AdminMessagesManager: React.FC<AdminMessagesManagerProps> = ({
   accentColor = '#e5a93c'
 }) => {
   const [selectedMessage, setSelectedMessage] = useState<ContactMessage | null>(null);
+  const safeMessages = Array.isArray(messages) ? messages : [];
 
   const handleToggleRead = async (msg: ContactMessage) => {
     try {
@@ -63,7 +64,7 @@ export const AdminMessagesManager: React.FC<AdminMessagesManagerProps> = ({
         </div>
       </div>
 
-      {(!messages || messages.length === 0) ? (
+      {(!safeMessages || safeMessages.length === 0) ? (
         <div className="p-12 text-center rounded-xl bg-[#11141c] border border-dashed border-[#242c3d]">
           <Mail className="w-8 h-8 text-[#6b7280] mx-auto mb-3" />
           <h3 className="text-sm font-semibold text-white mb-1">Inbox Empty</h3>
@@ -72,7 +73,7 @@ export const AdminMessagesManager: React.FC<AdminMessagesManagerProps> = ({
       ) : (
         <div className="rounded-xl bg-[#11141c] border border-[#1f2533] overflow-hidden">
           <div className="divide-y divide-[#1b212f]">
-            {(messages || []).map((msg) => (
+            {safeMessages.map((msg) => (
               <div
                 key={msg.id}
                 onClick={() => handleOpenMessage(msg)}

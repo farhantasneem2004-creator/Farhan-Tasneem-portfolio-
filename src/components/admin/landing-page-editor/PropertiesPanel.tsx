@@ -225,15 +225,17 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
     try {
       setIsUploading(true);
       const res = await api.uploadFile(file);
-      updateRootProp({ imageUrl: res.url });
-      // If updating hero image element, automatically synchronize with site settings
+      // If updating hero image element, automatically synchronize with site settings and use permanent static asset path
       if (
         selectedElement &&
         (selectedElement.id === 'elem-hero-image' ||
-          selectedElement.name?.toLowerCase().includes('hero') ||
-          selectedElement.type === 'image')
+          selectedElement.name?.toLowerCase().includes('hero'))
       ) {
-        api.updateSettings({ heroImage: res.url }).catch(console.error);
+        const updated = await api.updateSettings({ heroImage: res.url }).catch(() => null);
+        const persistentUrl = updated?.heroImage || '/images/hero/farhan-hero.png';
+        updateRootProp({ imageUrl: persistentUrl });
+      } else {
+        updateRootProp({ imageUrl: res.url });
       }
     } catch (err) {
       console.error('Failed uploading image:', err);

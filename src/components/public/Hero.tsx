@@ -51,8 +51,10 @@ export const Hero: React.FC<HeroProps> = ({
   const handleImageError = () => {
     if (currentImage !== DEFAULT_HERO_PORTRAIT) {
       setCurrentImage(DEFAULT_HERO_PORTRAIT);
-    } else if (currentImage !== '/images/farhan_hero_portrait_1789381757896.jpg') {
-      setCurrentImage('/images/farhan_hero_portrait_1789381757896.jpg');
+    } else if (currentImage !== '/images/hero/farhan-hero.jpg') {
+      setCurrentImage('/images/hero/farhan-hero.jpg');
+    } else if (currentImage !== '/farhan_hero_portrait.jpg') {
+      setCurrentImage('/farhan_hero_portrait.jpg');
     }
   };
 

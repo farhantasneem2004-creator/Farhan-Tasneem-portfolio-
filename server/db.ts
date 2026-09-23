@@ -61,7 +61,7 @@ const DEFAULT_DATA: DatabaseSchema = {
     heroSubtitle: 'CSE Student • Developer • Creative',
     heroDescription:
       "I'm a Computer Science and Engineering student with a passion for programming, web development, creative writing, technical visualization and building meaningful digital projects.",
-    heroImage: '/farhan_hero_portrait.jpg',
+    heroImage: '/images/hero/farhan-hero.png',
     heroImageCrop: 'cover',
     heroImagePosition: 'center',
     heroImageStyle: 'editorial',
@@ -466,6 +466,74 @@ const DEFAULT_DATA: DatabaseSchema = {
   ]
 };
 
+// Permanent static hero image asset paths
+export const STATIC_HERO_IMAGE_PATH = '/images/hero/farhan-hero.png';
+
+export function persistHeroImageToStaticAssets(inputUrlOrPath?: string | null): string {
+  if (!inputUrlOrPath || typeof inputUrlOrPath !== 'string') {
+    return STATIC_HERO_IMAGE_PATH;
+  }
+  const trimmed = inputUrlOrPath.trim();
+  if (trimmed === STATIC_HERO_IMAGE_PATH || trimmed === '/images/hero/farhan-hero.jpg') {
+    return STATIC_HERO_IMAGE_PATH;
+  }
+
+  try {
+    let sourceFilePath: string | null = null;
+
+    if (trimmed.startsWith('/uploads/') || trimmed.startsWith('uploads/')) {
+      const filename = path.basename(trimmed);
+      const candidates = [
+        path.join(process.cwd(), 'uploads', filename),
+        path.join(process.cwd(), 'public', 'uploads', filename)
+      ];
+      for (const cand of candidates) {
+        if (fs.existsSync(cand) && fs.statSync(cand).isFile()) {
+          sourceFilePath = cand;
+          break;
+        }
+      }
+    } else if (trimmed.startsWith('/images/') || trimmed.startsWith('/farhan_hero_portrait')) {
+      const candidates = [
+        path.join(process.cwd(), 'public', trimmed.replace(/^\//, '')),
+        path.join(process.cwd(), trimmed.replace(/^\//, ''))
+      ];
+      for (const cand of candidates) {
+        if (fs.existsSync(cand) && fs.statSync(cand).isFile()) {
+          sourceFilePath = cand;
+          break;
+        }
+      }
+    } else if (trimmed.startsWith('/') || trimmed.startsWith('.')) {
+      const full = path.join(process.cwd(), trimmed.replace(/^\//, ''));
+      if (fs.existsSync(full) && fs.statSync(full).isFile()) {
+        sourceFilePath = full;
+      }
+    }
+
+    if (sourceFilePath) {
+      const publicHeroDir = path.join(process.cwd(), 'public', 'images', 'hero');
+      const srcHeroDir = path.join(process.cwd(), 'src', 'assets', 'images', 'hero');
+      fs.mkdirSync(publicHeroDir, { recursive: true });
+      fs.mkdirSync(srcHeroDir, { recursive: true });
+
+      const destPng = path.join(publicHeroDir, 'farhan-hero.png');
+      const destJpg = path.join(publicHeroDir, 'farhan-hero.jpg');
+      const destSrcPng = path.join(srcHeroDir, 'farhan-hero.png');
+
+      fs.copyFileSync(sourceFilePath, destPng);
+      fs.copyFileSync(sourceFilePath, destJpg);
+      fs.copyFileSync(sourceFilePath, destSrcPng);
+
+      return STATIC_HERO_IMAGE_PATH;
+    }
+  } catch (err) {
+    console.error('Failed to copy hero image to permanent static assets:', err);
+  }
+
+  return STATIC_HERO_IMAGE_PATH;
+}
+
 class Database {
   private data: DatabaseSchema;
 
@@ -518,24 +586,32 @@ class Database {
     }
 
     // Automatically synchronize heroImage from settings to landing page elements
-    if (this.data.settings?.heroImage) {
-      const heroUrl = this.data.settings.heroImage;
-      const heroPos = this.data.settings.heroImagePosition || 'center top';
-      const syncHero = (layout?: LandingPageLayout) => {
-        if (!layout || !Array.isArray(layout.elements)) return;
-        for (const el of layout.elements) {
-          if (el.id === 'elem-hero-image' || el.type === 'image') {
-            if (el.imageUrl !== heroUrl) {
-              el.imageUrl = heroUrl;
-              if (heroPos) el.imagePosition = heroPos;
-              modified = true;
-            }
+    const rawHero = this.data.settings?.heroImage || STATIC_HERO_IMAGE_PATH;
+    const heroUrl = persistHeroImageToStaticAssets(rawHero);
+    if (this.data.settings.heroImage !== heroUrl) {
+      this.data.settings.heroImage = heroUrl;
+      modified = true;
+    }
+
+    const heroPos = this.data.settings.heroImagePosition || 'center top';
+    const syncHero = (layout?: LandingPageLayout) => {
+      if (!layout || !Array.isArray(layout.elements)) return;
+      for (const el of layout.elements) {
+        if (
+          el.id === 'elem-hero-image' ||
+          el.type === 'image' ||
+          el.name?.toLowerCase().includes('hero')
+        ) {
+          if (el.imageUrl !== heroUrl) {
+            el.imageUrl = heroUrl;
+            if (heroPos) el.imagePosition = heroPos;
+            modified = true;
           }
         }
-      };
-      syncHero(this.data.landingPagePublished);
-      syncHero(this.data.landingPageDraft);
-    }
+      }
+    };
+    syncHero(this.data.landingPagePublished);
+    syncHero(this.data.landingPageDraft);
 
     if (modified) {
       this.save();
@@ -567,6 +643,10 @@ class Database {
   }
 
   updateSettings(settings: Partial<SiteSettings>): SiteSettings {
+    if (settings.heroImage !== undefined) {
+      settings.heroImage = persistHeroImageToStaticAssets(settings.heroImage);
+    }
+
     this.data.settings = { ...this.data.settings, ...settings };
 
     // Synchronize hero image and visual properties to published and draft landing page layouts
@@ -940,10 +1020,23 @@ class Database {
 
   // CV Versions
   getCVVersions(): CVVersion[] {
-    return this.data.cvVersions;
+    return this.data.cvVersions || [];
+  }
+
+  getCVVersion(id: string): CVVersion | undefined {
+    return (this.data.cvVersions || []).find((v) => v.id === id);
+  }
+
+  getDefaultCVVersion(): CVVersion | undefined {
+    const list = this.data.cvVersions || [];
+    return list.find((v) => v.isDefault) || list[0];
   }
 
   addCVVersion(ver: Omit<CVVersion, 'id'>): CVVersion {
+    if (!this.data.cvVersions) this.data.cvVersions = [];
+    if (ver.isDefault) {
+      this.data.cvVersions.forEach((v) => { v.isDefault = false; });
+    }
     const newVer: CVVersion = { ...ver, id: `cv_${Date.now()}` };
     this.data.cvVersions.push(newVer);
     this.save();
@@ -951,8 +1044,12 @@ class Database {
   }
 
   updateCVVersion(id: string, update: Partial<CVVersion>): CVVersion | null {
+    if (!this.data.cvVersions) this.data.cvVersions = [];
     const idx = this.data.cvVersions.findIndex((v) => v.id === id);
     if (idx === -1) return null;
+    if (update.isDefault) {
+      this.data.cvVersions.forEach((v) => { v.isDefault = false; });
+    }
     this.data.cvVersions[idx] = { ...this.data.cvVersions[idx], ...update };
     this.save();
     return this.data.cvVersions[idx];
@@ -1030,7 +1127,9 @@ class Database {
     // Also sync published hero image back to site settings
     const heroEl = publishedLayout.elements.find((el) => el.id === 'elem-hero-image' || el.type === 'image');
     if (heroEl && heroEl.imageUrl) {
-      this.data.settings.heroImage = heroEl.imageUrl;
+      const stableHero = persistHeroImageToStaticAssets(heroEl.imageUrl);
+      heroEl.imageUrl = stableHero;
+      this.data.settings.heroImage = stableHero;
       if (heroEl.imagePosition) {
         this.data.settings.heroImagePosition = heroEl.imagePosition;
       }

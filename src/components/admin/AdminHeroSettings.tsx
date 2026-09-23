@@ -45,10 +45,9 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
     setUploading(true);
     try {
       const { url } = await api.uploadFile(file);
-      const updatedData = { ...formData, heroImage: url };
-      setFormData(updatedData);
-      // Automatically persist and synchronize directly to the live landing page
-      const updated = await api.updateSettings(updatedData);
+      // Automatically persist and synchronize directly to the live landing page as a permanent static asset
+      const updated = await api.updateSettings({ ...formData, heroImage: url });
+      setFormData(updated);
       onSettingsUpdated(updated);
       setSuccess(true);
       setTimeout(() => setSuccess(false), 4000);

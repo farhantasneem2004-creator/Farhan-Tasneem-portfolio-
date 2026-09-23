@@ -27,6 +27,8 @@ import type {
 } from '../src/types.js';
 
 export interface CvExportOptions {
+  versionId?: string;
+  versionName?: string;
   cvType?: 'academic' | 'professional' | 'technical' | 'creative' | 'general';
   template?: 'classic' | 'modern' | 'compact' | 'sidebar';
   length?: 'one-page' | 'two-page' | 'extended';
@@ -34,9 +36,20 @@ export interface CvExportOptions {
   photoUrl?: string;
   photoShape?: 'circle' | 'rounded' | 'square';
   photoPosition?: 'header-right' | 'header-left' | 'sidebar';
+  photoFilter?: 'none' | 'grayscale';
   accentColor?: string;
+  fontFamily?: 'sans' | 'serif' | 'mono';
   customTitle?: string;
   customSummary?: string;
+  contactInfo?: {
+    name?: string;
+    email?: string;
+    phone?: string;
+    location?: string;
+    github?: string;
+    linkedin?: string;
+    website?: string;
+  };
   sections?: {
     summary?: boolean;
     education?: boolean;
@@ -48,6 +61,11 @@ export interface CvExportOptions {
     contact?: boolean;
   };
   sectionOrder?: string[];
+  selectedProjectIds?: string[];
+  selectedExperienceIds?: string[];
+  selectedSkillIds?: string[];
+  selectedEducationIds?: string[];
+  selectedCertificationIds?: string[];
 }
 
 /**
@@ -56,46 +74,43 @@ export interface CvExportOptions {
 export function getHeroPortraitBuffer(customUrl?: string): { buffer: Buffer; mime: string } | null {
   try {
     const settings = db.getSettings();
-    const candidateUrl = customUrl || settings.heroImage || '';
+    const candidateUrl = customUrl || settings.heroImage || '/images/hero/farhan-hero.png';
 
     // If candidate starts with data:image
     if (candidateUrl.startsWith('data:image')) {
       const matches = candidateUrl.match(/^data:(image\/[a-zA-Z+]+);base64,(.+)$/);
       if (matches) {
+        const buf = Buffer.from(matches[2], 'base64');
+        const isPng = buf.length > 4 && buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47;
         return {
-          buffer: Buffer.from(matches[2], 'base64'),
-          mime: matches[1]
+          buffer: buf,
+          mime: isPng ? 'image/png' : 'image/jpeg'
         };
       }
     }
 
-    // Try candidate path from disk
-    if (candidateUrl) {
-      const cleanPath = candidateUrl.replace(/^\/+/, '');
-      const possibleLocations = [
-        path.join(process.cwd(), cleanPath),
-        path.join(process.cwd(), 'public', cleanPath),
-        path.join(process.cwd(), 'dist', cleanPath),
-        path.join(process.cwd(), 'uploads', path.basename(cleanPath))
-      ];
-      for (const loc of possibleLocations) {
-        if (fs.existsSync(loc) && fs.statSync(loc).isFile()) {
-          const ext = path.extname(loc).toLowerCase();
-          const mime = ext === '.png' ? 'image/png' : 'image/jpeg';
-          return { buffer: fs.readFileSync(loc), mime };
-        }
-      }
-    }
-
-    // Fallback to default portrait image in any known location
-    const fallbackPaths = [
+    // Candidate path from disk
+    const cleanPath = candidateUrl.replace(/^\/+/, '');
+    const possibleLocations = [
+      candidateUrl,
+      cleanPath,
+      path.join(process.cwd(), cleanPath),
+      path.join(process.cwd(), 'public', cleanPath),
+      path.join(process.cwd(), 'dist', cleanPath),
+      path.join(process.cwd(), 'uploads', path.basename(cleanPath)),
+      path.join(process.cwd(), 'public/uploads', path.basename(cleanPath)),
+      path.join(process.cwd(), 'public/images/hero/farhan-hero.png'),
+      path.join(process.cwd(), 'public/images/hero/farhan-hero.jpg'),
+      path.join(process.cwd(), 'src/assets/images/hero/farhan-hero.png'),
       path.join(process.cwd(), 'public/farhan_hero_portrait.jpg'),
-      path.join(process.cwd(), 'public/images/farhan_hero_portrait_1789381757896.jpg'),
-      path.join(process.cwd(), 'src/assets/images/farhan_hero_portrait_1789381757896.jpg')
+      path.join(process.cwd(), 'public/images/farhan_hero_portrait_1789381757896.jpg')
     ];
-    for (const fb of fallbackPaths) {
-      if (fs.existsSync(fb) && fs.statSync(fb).isFile()) {
-        return { buffer: fs.readFileSync(fb), mime: 'image/jpeg' };
+
+    for (const loc of possibleLocations) {
+      if (typeof loc === 'string' && fs.existsSync(loc) && fs.statSync(loc).isFile()) {
+        const buf = fs.readFileSync(loc);
+        const isPng = buf.length > 4 && buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47;
+        return { buffer: buf, mime: isPng ? 'image/png' : 'image/jpeg' };
       }
     }
   } catch (err) {
@@ -163,10 +178,27 @@ export function generateCvPdf(options: CvExportOptions = {}): Buffer {
   const maxEducation = targetLength === 'one-page' ? 2 : 4;
   const maxCertifications = targetLength === 'one-page' ? 3 : 6;
 
-  const projects = allProjects.slice(0, maxProjects);
-  const experiences = allExperiences.slice(0, maxExperiences);
-  const education = allEducation.slice(0, maxEducation);
-  const certifications = allCertifications.slice(0, maxCertifications);
+  // Filter items based on explicit selection IDs or defaults
+  const projects = options.selectedProjectIds && options.selectedProjectIds.length > 0
+    ? allProjects.filter((p) => options.selectedProjectIds!.includes(p.id))
+    : allProjects.slice(0, maxProjects);
+
+  const experiences = options.selectedExperienceIds && options.selectedExperienceIds.length > 0
+    ? allExperiences.filter((e) => options.selectedExperienceIds!.includes(e.id))
+    : allExperiences.slice(0, maxExperiences);
+
+  const education = options.selectedEducationIds && options.selectedEducationIds.length > 0
+    ? allEducation.filter((e) => options.selectedEducationIds!.includes(e.id))
+    : allEducation.slice(0, maxEducation);
+
+  const certifications = options.selectedCertificationIds && options.selectedCertificationIds.length > 0
+    ? allCertifications.filter((c) => options.selectedCertificationIds!.includes(c.id))
+    : allCertifications.slice(0, maxCertifications);
+
+  const skillsToRender = options.selectedSkillIds && options.selectedSkillIds.length > 0
+    ? allSkills.filter((s) => options.selectedSkillIds!.includes(s.id))
+    : allSkills;
+
   const services = allServices.slice(0, targetLength === 'one-page' ? 2 : 4);
 
   // Portrait photo resolution
@@ -185,9 +217,13 @@ export function generateCvPdf(options: CvExportOptions = {}): Buffer {
   const marginX = 40;
   const contentWidth = pageWidth - marginX * 2; // 532 pt
 
-  // Select font family according to CV type
+  // Select font family according to CV type or preference
   const isAcademic = cvType === 'academic';
-  const primaryFont = isAcademic ? 'times' : 'helvetica';
+  const primaryFont = options.fontFamily === 'serif' || isAcademic
+    ? 'times'
+    : options.fontFamily === 'mono'
+    ? 'courier'
+    : 'helvetica';
 
   let y = 38;
 
@@ -201,7 +237,11 @@ export function generateCvPdf(options: CvExportOptions = {}): Buffer {
   };
 
   // Helper to render candidate header
-  const fullName = `${settings.heroHeadingFirst || 'FARHAN'} ${settings.heroHeadingAccent || 'TASNEEM'}`.toUpperCase();
+  const fullName = (
+    options.contactInfo?.name ||
+    `${settings.heroHeadingFirst || 'FARHAN'} ${settings.heroHeadingAccent || 'TASNEEM'}`
+  ).toUpperCase();
+
   const defaultSub = isAcademic
     ? 'Computer Science & Engineering Student & Researcher'
     : cvType === 'technical'
@@ -211,39 +251,49 @@ export function generateCvPdf(options: CvExportOptions = {}): Buffer {
     : 'CSE Student • Software Developer • Technical Creator';
   const subtitle = options.customTitle || settings.heroSubtitle || defaultSub;
 
-  const email = 'farhantasneem2004@gmail.com';
-  const location = settings.aboutLocation || 'Dhaka, Bangladesh';
-  const contactRow = `${email}  |  ${location}  |  github.com/farhantasneem`;
+  const email = options.contactInfo?.email || 'farhantasneem2004@gmail.com';
+  const phone = options.contactInfo?.phone || '';
+  const location = options.contactInfo?.location || settings.aboutLocation || 'Dhaka, Bangladesh';
+  const github = options.contactInfo?.github || 'github.com/farhantasneem';
+  const linkedin = options.contactInfo?.linkedin || '';
+  const website = options.contactInfo?.website || '';
+
+  const contactItems = [email, phone, location, github, linkedin, website].filter(Boolean);
+  const contactRow = contactItems.join('  |  ');
 
   // Draw Photo if included in header
   if (portrait && photoPos !== 'sidebar') {
     const photoSize = 58;
     const photoBase64 = `data:${portrait.mime};base64,${portrait.buffer.toString('base64')}`;
+    const imgFormat = portrait.mime === 'image/png' ? 'PNG' : 'JPEG';
 
     if (photoPos === 'header-right') {
       // Photo on upper right corner
       const photoX = pageWidth - marginX - photoSize;
       const photoY = y;
-      doc.addImage(photoBase64, 'JPEG', photoX, photoY, photoSize, photoSize);
+      try {
+        doc.addImage(photoBase64, imgFormat, photoX, photoY, photoSize, photoSize);
+      } catch (err) {
+        console.warn('Failed to embed PDF image:', err);
+      }
       // Draw subtle accent border around photo
       doc.setDrawColor(ar, ag, ab);
       doc.setLineWidth(1);
       doc.rect(photoX, photoY, photoSize, photoSize);
 
       // Name and details with narrower width so they don't overlap photo
-      const textWidth = contentWidth - photoSize - 15;
       doc.setFont(primaryFont, 'bold');
       doc.setFontSize(isAcademic ? 20 : 22);
       doc.setTextColor(20, 24, 33);
       doc.text(fullName, marginX, y + 16);
 
       doc.setFont(primaryFont, isAcademic ? 'italic' : 'normal');
-      doc.setFontSize(11);
+      doc.setFontSize(10.5);
       doc.setTextColor(ar, ag, ab);
       doc.text(subtitle, marginX, y + 32);
 
       doc.setFont(primaryFont, 'normal');
-      doc.setFontSize(9);
+      doc.setFontSize(8.5);
       doc.setTextColor(80, 90, 105);
       doc.text(contactRow, marginX, y + 46);
 
@@ -252,7 +302,11 @@ export function generateCvPdf(options: CvExportOptions = {}): Buffer {
       // Photo on upper left
       const photoX = marginX;
       const photoY = y;
-      doc.addImage(photoBase64, 'JPEG', photoX, photoY, photoSize, photoSize);
+      try {
+        doc.addImage(photoBase64, imgFormat, photoX, photoY, photoSize, photoSize);
+      } catch (err) {
+        console.warn('Failed to embed PDF image:', err);
+      }
       doc.setDrawColor(ar, ag, ab);
       doc.setLineWidth(1);
       doc.rect(photoX, photoY, photoSize, photoSize);
@@ -264,12 +318,12 @@ export function generateCvPdf(options: CvExportOptions = {}): Buffer {
       doc.text(fullName, textX, y + 16);
 
       doc.setFont(primaryFont, isAcademic ? 'italic' : 'normal');
-      doc.setFontSize(11);
+      doc.setFontSize(10.5);
       doc.setTextColor(ar, ag, ab);
       doc.text(subtitle, textX, y + 32);
 
       doc.setFont(primaryFont, 'normal');
-      doc.setFontSize(9);
+      doc.setFontSize(8.5);
       doc.setTextColor(80, 90, 105);
       doc.text(contactRow, textX, y + 46);
 
@@ -279,7 +333,12 @@ export function generateCvPdf(options: CvExportOptions = {}): Buffer {
     // Creative dual-layout: photo placed in left column
     const photoSize = 70;
     const photoBase64 = `data:${portrait.mime};base64,${portrait.buffer.toString('base64')}`;
-    doc.addImage(photoBase64, 'JPEG', marginX, y, photoSize, photoSize);
+    const imgFormat = portrait.mime === 'image/png' ? 'PNG' : 'JPEG';
+    try {
+      doc.addImage(photoBase64, imgFormat, marginX, y, photoSize, photoSize);
+    } catch (err) {
+      console.warn('Failed to embed PDF image:', err);
+    }
     doc.setDrawColor(ar, ag, ab);
     doc.setLineWidth(1.5);
     doc.rect(marginX, y, photoSize, photoSize);
@@ -291,12 +350,12 @@ export function generateCvPdf(options: CvExportOptions = {}): Buffer {
     doc.text(fullName, textX, y + 20);
 
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(11);
+    doc.setFontSize(10.5);
     doc.setTextColor(ar, ag, ab);
     doc.text(subtitle, textX, y + 36);
 
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(9);
+    doc.setFontSize(8.5);
     doc.setTextColor(80, 90, 105);
     doc.text(contactRow, textX, y + 52);
 
@@ -309,12 +368,12 @@ export function generateCvPdf(options: CvExportOptions = {}): Buffer {
     doc.text(fullName, marginX, y + 16);
 
     doc.setFont(primaryFont, isAcademic ? 'italic' : 'normal');
-    doc.setFontSize(11);
+    doc.setFontSize(10.5);
     doc.setTextColor(ar, ag, ab);
     doc.text(subtitle, marginX, y + 32);
 
     doc.setFont(primaryFont, 'normal');
-    doc.setFontSize(9);
+    doc.setFontSize(8.5);
     doc.setTextColor(80, 90, 105);
     doc.text(contactRow, marginX, y + 46);
 
@@ -440,7 +499,7 @@ export function generateCvPdf(options: CvExportOptions = {}): Buffer {
       }
 
       case 'skills': {
-        if (!sec.skills || allSkills.length === 0) return;
+        if (!sec.skills || skillsToRender.length === 0) return;
         drawSectionHeader(
           isAcademic
             ? 'Technical Competencies & Laboratory Tools'
@@ -452,7 +511,7 @@ export function generateCvPdf(options: CvExportOptions = {}): Buffer {
         if (cvType === 'technical') {
           // Categorized matrix for technical ATS formatting
           const cats: Record<string, string[]> = {};
-          allSkills.forEach((s) => {
+          skillsToRender.forEach((s) => {
             const cat = s.category || 'General';
             if (!cats[cat]) cats[cat] = [];
             cats[cat].push(s.name);
@@ -477,7 +536,7 @@ export function generateCvPdf(options: CvExportOptions = {}): Buffer {
           doc.setFont(primaryFont, 'normal');
           doc.setFontSize(9);
           doc.setTextColor(45, 50, 60);
-          const skillText = allSkills.map((s) => `${s.name} (${s.level})`).join('   •   ');
+          const skillText = skillsToRender.map((s) => `${s.name} (${s.level})`).join('   •   ');
           const skillLines = doc.splitTextToSize(skillText, contentWidth);
           doc.text(skillLines, marginX, y);
           y += skillLines.length * 12 + 8;
@@ -492,7 +551,7 @@ export function generateCvPdf(options: CvExportOptions = {}): Buffer {
         );
 
         experiences.forEach((exp) => {
-          ensureSpace(45);
+          ensureSpace(50);
           doc.setFont(primaryFont, 'bold');
           doc.setFontSize(10);
           doc.setTextColor(20, 25, 35);
@@ -519,10 +578,24 @@ export function generateCvPdf(options: CvExportOptions = {}): Buffer {
             doc.setTextColor(60, 65, 75);
             const descLines = doc.splitTextToSize(exp.description, contentWidth);
             doc.text(descLines, marginX, y);
-            y += descLines.length * 11 + 6;
-          } else {
-            y += 4;
+            y += descLines.length * 11 + 4;
           }
+
+          // Render bulleted responsibilities if provided
+          if (Array.isArray(exp.responsibilities) && exp.responsibilities.length > 0) {
+            exp.responsibilities.forEach((resp) => {
+              if (!resp.trim()) return;
+              ensureSpace(16);
+              doc.setFont(primaryFont, 'normal');
+              doc.setFontSize(8.5);
+              doc.setTextColor(50, 55, 65);
+              const bulletText = `•  ${resp.trim()}`;
+              const respLines = doc.splitTextToSize(bulletText, contentWidth - 8);
+              doc.text(respLines, marginX + 8, y);
+              y += respLines.length * 11 + 2;
+            });
+          }
+          y += 4;
         });
         y += 4;
         break;
@@ -639,18 +712,46 @@ export async function generateCvDocx(options: CvExportOptions = {}): Promise<Buf
 
   const maxProjects = targetLength === 'one-page' ? 3 : 6;
   const maxExperiences = targetLength === 'one-page' ? 3 : 6;
-  const projects = allProjects.slice(0, maxProjects);
-  const experiences = allExperiences.slice(0, maxExperiences);
+  const projects = options.selectedProjectIds && options.selectedProjectIds.length > 0
+    ? allProjects.filter((p) => options.selectedProjectIds!.includes(p.id))
+    : allProjects.slice(0, maxProjects);
+
+  const experiences = options.selectedExperienceIds && options.selectedExperienceIds.length > 0
+    ? allExperiences.filter((e) => options.selectedExperienceIds!.includes(e.id))
+    : allExperiences.slice(0, maxExperiences);
+
+  const education = options.selectedEducationIds && options.selectedEducationIds.length > 0
+    ? allEducation.filter((e) => options.selectedEducationIds!.includes(e.id))
+    : allEducation;
+
+  const skillsToRender = options.selectedSkillIds && options.selectedSkillIds.length > 0
+    ? allSkills.filter((s) => options.selectedSkillIds!.includes(s.id))
+    : allSkills;
+
+  const certifications = options.selectedCertificationIds && options.selectedCertificationIds.length > 0
+    ? allCertifications.filter((c) => options.selectedCertificationIds!.includes(c.id))
+    : allCertifications;
 
   const docChildren: (Paragraph | Table)[] = [];
 
-  const fullName = `${settings.heroHeadingFirst || 'FARHAN'} ${settings.heroHeadingAccent || 'TASNEEM'}`.toUpperCase();
+  const fullName = (
+    options.contactInfo?.name ||
+    `${settings.heroHeadingFirst || 'FARHAN'} ${settings.heroHeadingAccent || 'TASNEEM'}`
+  ).toUpperCase();
+
   const subtitle =
     options.customTitle ||
     settings.heroSubtitle ||
     (isAcademic
       ? 'Computer Science & Engineering Student & Researcher'
       : 'CSE Student • Full-Stack Developer • Creative Technologist');
+
+  const email = options.contactInfo?.email || 'farhantasneem2004@gmail.com';
+  const phone = options.contactInfo?.phone || '';
+  const location = options.contactInfo?.location || settings.aboutLocation || 'Dhaka, Bangladesh';
+  const github = options.contactInfo?.github || 'github.com/farhantasneem';
+  const linkedin = options.contactInfo?.linkedin || '';
+  const contactText = [email, phone, location, github, linkedin].filter(Boolean).join('  |  ');
 
   // Header Table with Candidate Portrait Photo if requested
   if (portrait) {
@@ -679,7 +780,7 @@ export async function generateCvDocx(options: CvExportOptions = {}): Promise<Buf
                 new Paragraph({
                   children: [
                     new TextRun({
-                      text: `farhantasneem2004@gmail.com  |  ${settings.aboutLocation || 'Dhaka, Bangladesh'}  |  github.com/farhantasneem`,
+                      text: contactText,
                       size: 18,
                       color: '57606A'
                     })
@@ -696,7 +797,7 @@ export async function generateCvDocx(options: CvExportOptions = {}): Promise<Buf
                     new ImageRun({
                       data: portrait.buffer,
                       transformation: { width: 75, height: 75 },
-                      type: 'jpg'
+                      type: portrait.mime === 'image/png' ? 'png' : 'jpg'
                     } as any)
                   ]
                 })
@@ -720,7 +821,7 @@ export async function generateCvDocx(options: CvExportOptions = {}): Promise<Buf
         alignment: AlignmentType.CENTER
       }),
       new Paragraph({
-        text: `farhantasneem2004@gmail.com | ${settings.aboutLocation || 'Dhaka, Bangladesh'} | github.com/farhantasneem`,
+        text: contactText,
         alignment: AlignmentType.CENTER
       })
     );
@@ -750,7 +851,7 @@ export async function generateCvDocx(options: CvExportOptions = {}): Promise<Buf
       text: isAcademic ? 'EDUCATION & ACADEMIC BACKGROUND' : 'EDUCATION',
       heading: HeadingLevel.HEADING_1
     }),
-    ...allEducation.map(
+    ...education.map(
       (edu) =>
         new Paragraph({
           children: [
@@ -771,31 +872,41 @@ export async function generateCvDocx(options: CvExportOptions = {}): Promise<Buf
       heading: HeadingLevel.HEADING_1
     }),
     new Paragraph({
-      text: allSkills.map((s) => `${s.name} (${s.level})`).join('  •  ')
+      text: skillsToRender.map((s) => `${s.name} (${s.level})`).join('  •  ')
     }),
     new Paragraph({ text: '' })
   );
 
   // Experience
   if (experiences.length > 0) {
-    docChildren.push(
+    const expParagraphs: Paragraph[] = [
       new Paragraph({
         text: isAcademic ? 'ACADEMIC & PROFESSIONAL EXPERIENCE' : 'PROFESSIONAL EXPERIENCE',
         heading: HeadingLevel.HEADING_1
-      }),
-      ...experiences.map(
-        (exp) =>
-          new Paragraph({
-            children: [
-              new TextRun({ text: `${exp.position} — ${exp.organization}`, bold: true }),
-              new TextRun({ text: ` (${exp.startDate} – ${exp.current ? 'Present' : exp.endDate})\n` }),
-              new TextRun({ text: `${exp.type || 'Role'} • ${exp.location || 'Remote'}\n`, italics: true }),
-              new TextRun({ text: exp.description || '' })
-            ]
-          })
-      ),
-      new Paragraph({ text: '' })
-    );
+      })
+    ];
+
+    experiences.forEach((exp) => {
+      const runs: TextRun[] = [
+        new TextRun({ text: `${exp.position} — ${exp.organization}`, bold: true }),
+        new TextRun({ text: ` (${exp.startDate} – ${exp.current ? 'Present' : exp.endDate})\n` }),
+        new TextRun({ text: `${exp.type || 'Role'} • ${exp.location || 'Remote'}\n`, italics: true }),
+        new TextRun({ text: `${exp.description || ''}\n` })
+      ];
+
+      if (Array.isArray(exp.responsibilities) && exp.responsibilities.length > 0) {
+        exp.responsibilities.forEach((r) => {
+          if (r.trim()) {
+            runs.push(new TextRun({ text: `  • ${r.trim()}\n` }));
+          }
+        });
+      }
+
+      expParagraphs.push(new Paragraph({ children: runs }));
+    });
+
+    expParagraphs.push(new Paragraph({ text: '' }));
+    docChildren.push(...expParagraphs);
   }
 
   // Key Projects
@@ -821,13 +932,13 @@ export async function generateCvDocx(options: CvExportOptions = {}): Promise<Buf
   }
 
   // Certifications
-  if (allCertifications.length > 0) {
+  if (certifications.length > 0) {
     docChildren.push(
       new Paragraph({
         text: isAcademic ? 'HONORS & CERTIFICATIONS' : 'CERTIFICATIONS & CREDENTIALS',
         heading: HeadingLevel.HEADING_1
       }),
-      ...allCertifications.map(
+      ...certifications.map(
         (c) =>
           new Paragraph({
             children: [
