@@ -1,4 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
+import * as htmlToImage from 'html-to-image';
+import { jsPDF } from 'jspdf';
 import {
   FileText,
   Download,
@@ -11,6 +13,7 @@ import {
   Printer,
   Camera,
   Upload,
+  Image as ImageIcon,
   ArrowUp,
   ArrowDown,
   Palette,
@@ -153,8 +156,10 @@ export const AdminCVBuilder: React.FC<AdminCVBuilderProps> = ({
   const [selectedCertificationIds, setSelectedCertificationIds] = useState<string[]>([]);
 
   // Action & Feedback States
+  const [downloadingStudioPdf, setDownloadingStudioPdf] = useState(false);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
   const [downloadingDocx, setDownloadingDocx] = useState(false);
+  const [downloadingImage, setDownloadingImage] = useState<'png' | 'jpg' | null>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [versionDownloadingId, setVersionDownloadingId] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
@@ -221,24 +226,28 @@ export const AdminCVBuilder: React.FC<AdminCVBuilderProps> = ({
       setSectionOrder(ver.sectionOrder);
     }
 
-    if (ver.selectedProjectIds && ver.selectedProjectIds.length > 0) {
+    if (Array.isArray(ver.selectedProjectIds)) {
       setSelectedProjectIds(ver.selectedProjectIds);
     }
-    if (ver.selectedExperienceIds && ver.selectedExperienceIds.length > 0) {
+    if (Array.isArray(ver.selectedExperienceIds)) {
       setSelectedExperienceIds(ver.selectedExperienceIds);
     }
-    if (ver.selectedSkillIds && ver.selectedSkillIds.length > 0) {
+    if (Array.isArray(ver.selectedSkillIds)) {
       setSelectedSkillIds(ver.selectedSkillIds);
     }
-    if (ver.selectedEducationIds && ver.selectedEducationIds.length > 0) {
+    if (Array.isArray(ver.selectedEducationIds)) {
       setSelectedEducationIds(ver.selectedEducationIds);
     }
-    if (ver.selectedCertificationIds && ver.selectedCertificationIds.length > 0) {
+    if (Array.isArray(ver.selectedCertificationIds)) {
       setSelectedCertificationIds(ver.selectedCertificationIds);
     }
 
-    setStatusMessage(`Loaded "${ver.title}" preset into studio!`);
-    setTimeout(() => setStatusMessage(null), 3500);
+    setStatusMessage(`Loaded "${ver.title}" into active studio! Customize or click "Download Exact Studio Print".`);
+    setTimeout(() => setStatusMessage(null), 4000);
+
+    // Smooth scroll down to live studio sheet if user loaded preset
+    const sheetEl = document.getElementById('cv-printable-sheet');
+    sheetEl?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   };
 
   // Archetype Presets Switcher
@@ -394,6 +403,195 @@ export const AdminCVBuilder: React.FC<AdminCVBuilderProps> = ({
       selectedEducationIds,
       selectedCertificationIds
     };
+  };
+
+  // Exact 1:1 Studio Print Downloader (Captures active sheet DOM directly)
+  const handleDownloadStudioExactPDF = async () => {
+    const sheetElement = document.getElementById('cv-printable-sheet');
+    if (!sheetElement) {
+      alert('CV sheet preview container was not found. Please refresh and try again.');
+      return;
+    }
+
+    setDownloadingStudioPdf(true);
+    setStatusMessage('Rendering exact studio print to PDF (300 DPI high-res)...');
+
+    // Save previous styles
+    const prevTransform = sheetElement.style.transform;
+    const prevMaxHeight = sheetElement.style.maxHeight;
+    const prevOverflow = sheetElement.style.overflow;
+    const prevBoxShadow = sheetElement.style.boxShadow;
+    const prevBorder = sheetElement.style.border;
+    const prevBorderRadius = sheetElement.style.borderRadius;
+
+    try {
+      // 1. Temporarily normalize styling so capture grabs unclipped full content
+      sheetElement.style.transform = 'none';
+      sheetElement.style.maxHeight = 'none';
+      sheetElement.style.overflow = 'visible';
+      sheetElement.style.boxShadow = 'none';
+      sheetElement.style.border = 'none';
+      sheetElement.style.borderRadius = '0';
+
+      // 2. Wait for DOM reflow
+      await new Promise((r) => setTimeout(r, 120));
+
+      // 3. Render exact DOM to canvas with html-to-image (supports oklch, modern CSS colors natively)
+      let canvas: HTMLCanvasElement;
+      try {
+        canvas = await htmlToImage.toCanvas(sheetElement, {
+          pixelRatio: 2,
+          backgroundColor: '#ffffff',
+          cacheBust: true
+        });
+      } catch (firstErr) {
+        console.warn('Initial canvas capture encountered font issue, retrying with skipFonts', firstErr);
+        canvas = await htmlToImage.toCanvas(sheetElement, {
+          pixelRatio: 2,
+          backgroundColor: '#ffffff',
+          cacheBust: true,
+          skipFonts: true
+        });
+      }
+
+      // 4. Create standard Letter PDF (612 x 792 pt)
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'pt',
+        format: 'letter'
+      });
+
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+
+      const imgWidth = pdfWidth;
+      const imgHeight = (canvas.height * pdfWidth) / canvas.width;
+      const imgData = canvas.toDataURL('image/jpeg', 0.98);
+
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      // Add Page 1
+      pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
+      heightLeft -= pdfHeight;
+
+      // Multi-page pagination if content extends past 1 page and not restricted to single page
+      if (targetLength !== 'one-page') {
+        while (heightLeft > 25) {
+          position -= pdfHeight;
+          pdf.addPage();
+          pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
+          heightLeft -= pdfHeight;
+        }
+      }
+
+      const safeFilename = `${(versionName || 'Farhan-Tasneem-CV')
+        .replace(/[^a-zA-Z0-9_-]/g, '-')
+        .replace(/-+/g, '-')}.pdf`;
+
+      pdf.save(safeFilename);
+      setStatusMessage(`Downloaded exact studio print "${safeFilename}" successfully!`);
+      setTimeout(() => setStatusMessage(null), 4000);
+    } catch (err: any) {
+      console.error('Client print capture error, falling back to server export:', err);
+      await handleDownloadPDF();
+    } finally {
+      // Restore previous styles
+      sheetElement.style.transform = prevTransform;
+      sheetElement.style.maxHeight = prevMaxHeight;
+      sheetElement.style.overflow = prevOverflow;
+      sheetElement.style.boxShadow = prevBoxShadow;
+      sheetElement.style.border = prevBorder;
+      sheetElement.style.borderRadius = prevBorderRadius;
+      setDownloadingStudioPdf(false);
+    }
+  };
+
+  // Exact 1:1 Active Preview Image Downloader (JPG or PNG)
+  const handleDownloadActiveImage = async (format: 'png' | 'jpg') => {
+    const sheetElement = document.getElementById('cv-printable-sheet');
+    if (!sheetElement) {
+      alert('CV sheet preview container was not found. Please refresh and try again.');
+      return;
+    }
+
+    setDownloadingImage(format);
+    setStatusMessage(`Rendering active CV preview as high-res ${format.toUpperCase()} image...`);
+
+    const prevTransform = sheetElement.style.transform;
+    const prevMaxHeight = sheetElement.style.maxHeight;
+    const prevOverflow = sheetElement.style.overflow;
+    const prevBoxShadow = sheetElement.style.boxShadow;
+    const prevBorder = sheetElement.style.border;
+    const prevBorderRadius = sheetElement.style.borderRadius;
+
+    try {
+      sheetElement.style.transform = 'none';
+      sheetElement.style.maxHeight = 'none';
+      sheetElement.style.overflow = 'visible';
+      sheetElement.style.boxShadow = 'none';
+      sheetElement.style.border = 'none';
+      sheetElement.style.borderRadius = '0';
+
+      await new Promise((r) => setTimeout(r, 120));
+
+      let dataUrl: string;
+      try {
+        dataUrl = format === 'png'
+          ? await htmlToImage.toPng(sheetElement, {
+              pixelRatio: 2,
+              backgroundColor: '#ffffff',
+              cacheBust: true
+            })
+          : await htmlToImage.toJpeg(sheetElement, {
+              pixelRatio: 2,
+              quality: 0.95,
+              backgroundColor: '#ffffff',
+              cacheBust: true
+            });
+      } catch (firstErr) {
+        console.warn('Initial image capture encountered font issue, retrying with skipFonts', firstErr);
+        dataUrl = format === 'png'
+          ? await htmlToImage.toPng(sheetElement, {
+              pixelRatio: 2,
+              backgroundColor: '#ffffff',
+              cacheBust: true,
+              skipFonts: true
+            })
+          : await htmlToImage.toJpeg(sheetElement, {
+              pixelRatio: 2,
+              quality: 0.95,
+              backgroundColor: '#ffffff',
+              cacheBust: true,
+              skipFonts: true
+            });
+      }
+
+      const safeFilename = `${(versionName || 'Farhan-Tasneem-CV')
+        .replace(/[^a-zA-Z0-9_-]/g, '-')
+        .replace(/-+/g, '-')}.${format}`;
+
+      const link = document.createElement('a');
+      link.download = safeFilename;
+      link.href = dataUrl;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      setStatusMessage(`Downloaded "${safeFilename}" as ${format.toUpperCase()} image!`);
+      setTimeout(() => setStatusMessage(null), 4000);
+    } catch (err: any) {
+      console.error(`Failed to export ${format.toUpperCase()}:`, err);
+      alert(`Failed to export ${format.toUpperCase()} image: ` + (err.message || 'Unknown error'));
+    } finally {
+      sheetElement.style.transform = prevTransform;
+      sheetElement.style.maxHeight = prevMaxHeight;
+      sheetElement.style.overflow = prevOverflow;
+      sheetElement.style.boxShadow = prevBoxShadow;
+      sheetElement.style.border = prevBorder;
+      sheetElement.style.borderRadius = prevBorderRadius;
+      setDownloadingImage(null);
+    }
   };
 
   // Download PDF for Active Studio state
@@ -734,7 +932,7 @@ export const AdminCVBuilder: React.FC<AdminCVBuilderProps> = ({
   return (
     <div className="space-y-6">
       {/* Top Banner & Notification Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-[#11141c] p-5 rounded-2xl border border-[#1e2535]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-[#11141c] p-5 rounded-2xl border border-[#1e2535] no-print">
         <div>
           <div className="flex items-center gap-2 mb-1">
             <Sparkles className="w-4 h-4" style={{ color: selectedAccent }} />
@@ -744,38 +942,79 @@ export const AdminCVBuilder: React.FC<AdminCVBuilderProps> = ({
           </div>
           <p className="text-xs text-[#848ea0] max-w-2xl">
             Design, tailor, and instantly download distinct CV profiles (Academic, Systems Engineering, Executive, or Creative).
-            Save custom versions, toggle specific projects and work experiences, and customize portrait framing with 1-click PDF/Word exports.
+            The active preview reflects your edits live. Download it directly as <span className="text-emerald-400 font-semibold">PNG</span>, <span className="text-amber-400 font-semibold">JPG</span>, <span className="text-white font-semibold">PDF</span>, or <span className="text-sky-400 font-semibold">Word</span>.
           </p>
         </div>
 
         {/* Global Studio Export Action Group */}
-        <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Primary 1:1 Studio Print Downloader */}
           <button
             type="button"
-            onClick={handleDownloadPDF}
-            disabled={downloadingPdf}
-            className="px-4 py-2 rounded-xl text-xs font-bold text-neutral-900 shadow-lg flex items-center gap-2 transition-all hover:opacity-95 active:scale-95 cursor-pointer disabled:opacity-50"
+            onClick={handleDownloadStudioExactPDF}
+            disabled={downloadingStudioPdf}
+            className="px-3.5 py-2 rounded-xl text-xs font-bold text-neutral-900 shadow-xl flex items-center gap-1.5 transition-all hover:opacity-95 active:scale-95 cursor-pointer disabled:opacity-50 ring-2 ring-amber-400/40"
             style={{ backgroundColor: selectedAccent }}
+            title="Download the exact visual document you have configured in this studio session as PDF"
           >
-            <Download className="w-3.5 h-3.5" />
-            <span>{downloadingPdf ? 'Exporting PDF...' : 'Download Active PDF'}</span>
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>{downloadingStudioPdf ? 'Rendering PDF...' : 'Download PDF'}</span>
           </button>
 
+          {/* Download as PNG */}
+          <button
+            type="button"
+            onClick={() => handleDownloadActiveImage('png')}
+            disabled={downloadingImage !== null}
+            className="px-3 py-2 rounded-xl text-xs font-semibold bg-[#0e1d17] text-emerald-300 border border-emerald-500/40 hover:bg-[#132b20] hover:text-emerald-200 flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer disabled:opacity-50 shadow-sm"
+            title="Download the activated CV preview as high-resolution PNG image"
+          >
+            <ImageIcon className="w-3.5 h-3.5 text-emerald-400" />
+            <span>{downloadingImage === 'png' ? 'Saving PNG...' : 'Download PNG'}</span>
+          </button>
+
+          {/* Download as JPG */}
+          <button
+            type="button"
+            onClick={() => handleDownloadActiveImage('jpg')}
+            disabled={downloadingImage !== null}
+            className="px-3 py-2 rounded-xl text-xs font-semibold bg-[#211a10] text-amber-300 border border-amber-500/40 hover:bg-[#2f2414] hover:text-amber-200 flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer disabled:opacity-50 shadow-sm"
+            title="Download the activated CV preview as high-resolution JPG image"
+          >
+            <ImageIcon className="w-3.5 h-3.5 text-amber-400" />
+            <span>{downloadingImage === 'jpg' ? 'Saving JPG...' : 'Download JPG'}</span>
+          </button>
+
+          {/* Word Document (.docx) */}
           <button
             type="button"
             onClick={handleDownloadDOCX}
             disabled={downloadingDocx}
-            className="px-3.5 py-2 rounded-xl text-xs font-semibold bg-[#1a2233] text-white border border-[#2b3952] hover:bg-[#202a3f] flex items-center gap-2 transition-all cursor-pointer disabled:opacity-50"
+            className="px-3 py-2 rounded-xl text-xs font-semibold bg-[#1a2233] text-white border border-[#2b3952] hover:bg-[#202a3f] flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
+            title="Download formatted Microsoft Word document (.docx)"
           >
             <FileText className="w-3.5 h-3.5 text-sky-400" />
-            <span>{downloadingDocx ? 'Generating Word...' : 'Download Word (.docx)'}</span>
+            <span>{downloadingDocx ? 'Generating Word...' : 'Word (.docx)'}</span>
           </button>
 
+          {/* Server Vector PDF */}
+          <button
+            type="button"
+            onClick={handleDownloadPDF}
+            disabled={downloadingPdf}
+            className="px-2.5 py-2 rounded-xl text-xs font-semibold bg-[#141824] text-[#9ca3af] hover:text-white border border-[#232c40] hover:bg-[#1a2030] flex items-center gap-1 transition-all cursor-pointer disabled:opacity-50"
+            title="Generate text-vector PDF via server engine"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span>{downloadingPdf ? 'Vector PDF...' : 'Vector PDF'}</span>
+          </button>
+
+          {/* Browser Clean Print Dialog */}
           <button
             type="button"
             onClick={() => window.print()}
             className="p-2 rounded-xl bg-[#141824] border border-[#232c40] text-[#9ca3af] hover:text-white hover:bg-[#1a2030] transition-all cursor-pointer"
-            title="Browser Print Preview"
+            title="Browser Print / Save as PDF (Clean Sheet Only)"
           >
             <Printer className="w-4 h-4" />
           </button>
@@ -793,7 +1032,7 @@ export const AdminCVBuilder: React.FC<AdminCVBuilderProps> = ({
       {/* ==================================================================== */}
       {/* SECTION 1: SAVED CV PRESETS HUB & MULTI-CV DOWNLOADER                */}
       {/* ==================================================================== */}
-      <div className="bg-[#11141c] border border-[#1e2535] rounded-2xl p-5 space-y-4">
+      <div className="bg-[#11141c] border border-[#1e2535] rounded-2xl p-5 space-y-4 no-print">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#1c2230] pb-3">
           <div className="flex items-center gap-2.5">
             <Layers className="w-4 h-4" style={{ color: selectedAccent }} />
@@ -966,7 +1205,7 @@ export const AdminCVBuilder: React.FC<AdminCVBuilderProps> = ({
       {/* ==================================================================== */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Left Column: Studio Controls Tabs */}
-        <div className="lg:col-span-5 space-y-4">
+        <div className="lg:col-span-5 space-y-4 no-print">
           {/* Studio Tabs Navigation */}
           <div className="grid grid-cols-4 gap-1 bg-[#11141c] p-1.5 rounded-xl border border-[#1e2535]">
             {[
@@ -1670,28 +1909,82 @@ export const AdminCVBuilder: React.FC<AdminCVBuilderProps> = ({
         <div className="lg:col-span-7">
           <div className="sticky top-6 space-y-3">
             {/* Sheet Preview Bar */}
-            <div className="flex items-center justify-between text-xs text-[#848ea0] bg-[#11141c] px-4 py-2.5 rounded-xl border border-[#1e2535]">
-              <span className="font-semibold text-white flex items-center gap-1.5">
-                <Eye className="w-4 h-4" style={{ color: selectedAccent }} />
-                <span>
-                  {cvType === 'academic'
-                    ? 'Academic Scholarly View'
-                    : cvType === 'technical'
-                    ? 'Technical Matrix View'
-                    : cvType === 'creative'
-                    ? 'Creative Dual-Column View'
-                    : 'Executive Professional View'}{' '}
-                  • {targetLength.replace('-', ' ')}
-                </span>
-              </span>
-
-              {/* Zoom Controls */}
+            <div className="flex items-center justify-between text-xs text-[#848ea0] bg-[#11141c] px-4 py-2.5 rounded-xl border border-[#1e2535] no-print">
               <div className="flex items-center gap-2">
+                <span className="font-semibold text-white flex items-center gap-1.5">
+                  <Eye className="w-4 h-4" style={{ color: selectedAccent }} />
+                  <span>
+                    {cvType === 'academic'
+                      ? 'Academic Scholarly View'
+                      : cvType === 'technical'
+                      ? 'Technical Matrix View'
+                      : cvType === 'creative'
+                      ? 'Creative Dual-Column View'
+                      : 'Executive Professional View'}{' '}
+                    • {targetLength.replace('-', ' ')}
+                  </span>
+                </span>
+                <span className="hidden xl:inline text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                  Active Live Print
+                </span>
+              </div>
+
+              {/* Quick Actions & Zoom Controls */}
+              <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                {/* Instant Exact Studio Print Downloader */}
+                <button
+                  type="button"
+                  onClick={handleDownloadStudioExactPDF}
+                  disabled={downloadingStudioPdf}
+                  className="px-2.5 py-1 rounded-lg text-[11px] font-bold text-neutral-900 shadow flex items-center gap-1 transition-all hover:opacity-95 active:scale-95 cursor-pointer disabled:opacity-50 ring-1 ring-amber-400/50"
+                  style={{ backgroundColor: selectedAccent }}
+                  title="Export this exact customized preview sheet to high-res PDF"
+                >
+                  <Sparkles className="w-3 h-3 text-neutral-900" />
+                  <span>{downloadingStudioPdf ? 'Exporting...' : 'PDF'}</span>
+                </button>
+
+                {/* Download preview as PNG */}
+                <button
+                  type="button"
+                  onClick={() => handleDownloadActiveImage('png')}
+                  disabled={downloadingImage !== null}
+                  className="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-[#0e1d17] text-emerald-300 border border-emerald-500/40 hover:bg-[#132b20] hover:text-emerald-200 shadow flex items-center gap-1 transition-all active:scale-95 cursor-pointer disabled:opacity-50"
+                  title="Download preview as PNG image"
+                >
+                  <ImageIcon className="w-3 h-3 text-emerald-400" />
+                  <span>{downloadingImage === 'png' ? 'Saving...' : 'PNG'}</span>
+                </button>
+
+                {/* Download preview as JPG */}
+                <button
+                  type="button"
+                  onClick={() => handleDownloadActiveImage('jpg')}
+                  disabled={downloadingImage !== null}
+                  className="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-[#211a10] text-amber-300 border border-amber-500/40 hover:bg-[#2f2414] hover:text-amber-200 shadow flex items-center gap-1 transition-all active:scale-95 cursor-pointer disabled:opacity-50"
+                  title="Download preview as JPG image"
+                >
+                  <ImageIcon className="w-3 h-3 text-amber-400" />
+                  <span>{downloadingImage === 'jpg' ? 'Saving...' : 'JPG'}</span>
+                </button>
+
+                {/* Print Sheet */}
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  className="p-1.5 rounded-lg bg-[#0c0e12] border border-[#202736] text-[#848ea0] hover:text-white transition-all cursor-pointer"
+                  title="Print this sheet (clean layout)"
+                >
+                  <Printer className="w-3.5 h-3.5" />
+                </button>
+
+                {/* Zoom Controls */}
                 <div className="flex items-center gap-1 bg-[#0c0e12] px-2 py-0.5 rounded-lg border border-[#202736] text-[10px] font-mono">
                   <button
                     type="button"
                     onClick={() => setPreviewZoom(Math.max(80, previewZoom - 10))}
                     className="hover:text-white cursor-pointer px-1"
+                    title="Zoom Out"
                   >
                     -
                   </button>
@@ -1700,13 +1993,11 @@ export const AdminCVBuilder: React.FC<AdminCVBuilderProps> = ({
                     type="button"
                     onClick={() => setPreviewZoom(Math.min(130, previewZoom + 10))}
                     className="hover:text-white cursor-pointer px-1"
+                    title="Zoom In"
                   >
                     +
                   </button>
                 </div>
-                <span className="font-mono text-[10px] text-[#6b7280]">
-                  8.5" × 11" Standard
-                </span>
               </div>
             </div>
 

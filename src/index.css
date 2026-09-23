@@ -42,9 +42,13 @@ h1, h2, h3, .font-display {
 }
 
 @media print {
-  body {
+  @page {
+    size: letter portrait;
+    margin: 8mm;
+  }
+  html, body {
     background: #ffffff !important;
-    color: #000000 !important;
+    color: #111827 !important;
     padding: 0 !important;
     margin: 0 !important;
   }
@@ -53,10 +57,26 @@ h1, h2, h3, .font-display {
   nav,
   header,
   footer,
-  button {
+  button,
+  input,
+  select,
+  textarea,
+  .print-hidden {
     display: none !important;
   }
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+  .max-w-6xl {
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
   #cv-printable-sheet {
+    transform: none !important;
     max-height: none !important;
     overflow: visible !important;
     box-shadow: none !important;
@@ -64,5 +84,7 @@ h1, h2, h3, .font-display {
     padding: 0 !important;
     margin: 0 !important;
     width: 100% !important;
+    background: #ffffff !important;
+    color: #111827 !important;
   }
 }

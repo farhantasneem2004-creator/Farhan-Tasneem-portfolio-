@@ -179,23 +179,23 @@ export function generateCvPdf(options: CvExportOptions = {}): Buffer {
   const maxCertifications = targetLength === 'one-page' ? 3 : 6;
 
   // Filter items based on explicit selection IDs or defaults
-  const projects = options.selectedProjectIds && options.selectedProjectIds.length > 0
+  const projects = Array.isArray(options.selectedProjectIds)
     ? allProjects.filter((p) => options.selectedProjectIds!.includes(p.id))
     : allProjects.slice(0, maxProjects);
 
-  const experiences = options.selectedExperienceIds && options.selectedExperienceIds.length > 0
+  const experiences = Array.isArray(options.selectedExperienceIds)
     ? allExperiences.filter((e) => options.selectedExperienceIds!.includes(e.id))
     : allExperiences.slice(0, maxExperiences);
 
-  const education = options.selectedEducationIds && options.selectedEducationIds.length > 0
+  const education = Array.isArray(options.selectedEducationIds)
     ? allEducation.filter((e) => options.selectedEducationIds!.includes(e.id))
     : allEducation.slice(0, maxEducation);
 
-  const certifications = options.selectedCertificationIds && options.selectedCertificationIds.length > 0
+  const certifications = Array.isArray(options.selectedCertificationIds)
     ? allCertifications.filter((c) => options.selectedCertificationIds!.includes(c.id))
     : allCertifications.slice(0, maxCertifications);
 
-  const skillsToRender = options.selectedSkillIds && options.selectedSkillIds.length > 0
+  const skillsToRender = Array.isArray(options.selectedSkillIds)
     ? allSkills.filter((s) => options.selectedSkillIds!.includes(s.id))
     : allSkills;
 
@@ -712,23 +712,23 @@ export async function generateCvDocx(options: CvExportOptions = {}): Promise<Buf
 
   const maxProjects = targetLength === 'one-page' ? 3 : 6;
   const maxExperiences = targetLength === 'one-page' ? 3 : 6;
-  const projects = options.selectedProjectIds && options.selectedProjectIds.length > 0
+  const projects = Array.isArray(options.selectedProjectIds)
     ? allProjects.filter((p) => options.selectedProjectIds!.includes(p.id))
     : allProjects.slice(0, maxProjects);
 
-  const experiences = options.selectedExperienceIds && options.selectedExperienceIds.length > 0
+  const experiences = Array.isArray(options.selectedExperienceIds)
     ? allExperiences.filter((e) => options.selectedExperienceIds!.includes(e.id))
     : allExperiences.slice(0, maxExperiences);
 
-  const education = options.selectedEducationIds && options.selectedEducationIds.length > 0
+  const education = Array.isArray(options.selectedEducationIds)
     ? allEducation.filter((e) => options.selectedEducationIds!.includes(e.id))
     : allEducation;
 
-  const skillsToRender = options.selectedSkillIds && options.selectedSkillIds.length > 0
+  const skillsToRender = Array.isArray(options.selectedSkillIds)
     ? allSkills.filter((s) => options.selectedSkillIds!.includes(s.id))
     : allSkills;
 
-  const certifications = options.selectedCertificationIds && options.selectedCertificationIds.length > 0
+  const certifications = Array.isArray(options.selectedCertificationIds)
     ? allCertifications.filter((c) => options.selectedCertificationIds!.includes(c.id))
     : allCertifications;
 
