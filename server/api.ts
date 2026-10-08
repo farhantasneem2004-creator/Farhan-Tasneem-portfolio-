@@ -13,11 +13,26 @@ import { generateCvPdf, generateCvDocx, CvExportOptions } from './cvExport.js';
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'farhan_tasneem_portfolio_secret_2026';
 
-// Configure multer storage for uploads
-const UPLOADS_DIR = path.join(process.cwd(), 'uploads');
-if (!fs.existsSync(UPLOADS_DIR)) {
-  fs.mkdirSync(UPLOADS_DIR, { recursive: true });
-}
+// Configure multer storage for uploads (safe for local disk and serverless read-only environments)
+const UPLOADS_DIR = (() => {
+  const defaultDir = path.join(process.cwd(), 'uploads');
+  try {
+    if (!fs.existsSync(defaultDir)) {
+      fs.mkdirSync(defaultDir, { recursive: true });
+    }
+    return defaultDir;
+  } catch {
+    const tmpDir = path.join('/tmp', 'uploads');
+    try {
+      if (!fs.existsSync(tmpDir)) {
+        fs.mkdirSync(tmpDir, { recursive: true });
+      }
+      return tmpDir;
+    } catch {
+      return '/tmp';
+    }
+  }
+})();
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -94,7 +109,9 @@ function requireAuthOrQueryToken(req: AuthRequest, res: Response, next: NextFunc
 // Get entire public view (only visible items)
 router.get('/public/portfolio', (req: Request, res: Response) => {
   try {
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
     const settings = db.getSettings();
     const socialLinks = db.getSocialLinks().filter((l) => l.visible);
     const skills = db.getSkills().filter((s) => s.visible);

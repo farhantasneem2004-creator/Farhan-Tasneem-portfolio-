@@ -478,14 +478,18 @@ export function persistHeroImageToStaticAssets(inputUrlOrPath?: string | null): 
     return STATIC_HERO_IMAGE_PATH;
   }
 
-  // Preserve external URLs as-is
+  // Preserve external URLs and SVG/base64 data URLs as-is
   if (trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('data:image')) {
     return trimmed;
   }
 
+  // Separate query parameters or hash from path for file operations
+  const [cleanPath, queryPart] = trimmed.split('?');
+  const querySuffix = queryPart ? `?${queryPart}` : '';
+
   // Normalize and mirror uploaded file paths between uploads and public/uploads
-  if (trimmed.startsWith('/uploads/') || trimmed.startsWith('uploads/')) {
-    const filename = path.basename(trimmed);
+  if (cleanPath.startsWith('/uploads/') || cleanPath.startsWith('uploads/')) {
+    const filename = path.basename(cleanPath);
     const rootUpload = path.join(process.cwd(), 'uploads', filename);
     const publicUpload = path.join(process.cwd(), 'public', 'uploads', filename);
     try {
@@ -499,44 +503,67 @@ export function persistHeroImageToStaticAssets(inputUrlOrPath?: string | null): 
         fs.copyFileSync(publicUpload, rootUpload);
       }
     } catch (e) {
-      console.warn('Could not mirror hero upload:', e);
+      // In read-only environments (e.g. Vercel serverless), ignore mirroring errors
     }
-    return trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+    const normalized = cleanPath.startsWith('/') ? cleanPath : `/${cleanPath}`;
+    return `${normalized}${querySuffix}`;
   }
 
   // Map legacy /src/assets/images paths to /images
-  if (trimmed.startsWith('/src/assets/images/')) {
-    return trimmed.replace('/src/assets/images/', '/images/');
+  if (cleanPath.startsWith('/src/assets/images/')) {
+    return `${cleanPath.replace('/src/assets/images/', '/images/')}${querySuffix}`;
   }
 
   // Preserve local static paths
-  if (trimmed.startsWith('/images/') || trimmed.startsWith('images/')) {
-    return trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+  if (cleanPath.startsWith('/images/') || cleanPath.startsWith('images/')) {
+    const normalized = cleanPath.startsWith('/') ? cleanPath : `/${cleanPath}`;
+    return `${normalized}${querySuffix}`;
   }
 
-  return trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+  const normalized = cleanPath.startsWith('/') ? cleanPath : `/${cleanPath}`;
+  return `${normalized}${querySuffix}`;
 }
 
 class Database {
   private data: DatabaseSchema;
 
   constructor() {
-    if (!fs.existsSync(DATA_DIR)) {
-      fs.mkdirSync(DATA_DIR, { recursive: true });
+    try {
+      if (!fs.existsSync(DATA_DIR)) {
+        fs.mkdirSync(DATA_DIR, { recursive: true });
+      }
+    } catch {
+      // In read-only serverless environment (e.g. Vercel), ignore mkdir errors
     }
 
-    if (fs.existsSync(DB_FILE)) {
+    const tmpDbFile = path.join('/tmp', 'database.json');
+    let loaded = false;
+
+    // First check if an updated database copy exists in /tmp (for serverless sessions)
+    if (fs.existsSync(tmpDbFile)) {
       try {
-        const raw = fs.readFileSync(DB_FILE, 'utf-8');
+        const raw = fs.readFileSync(tmpDbFile, 'utf-8');
         this.data = JSON.parse(raw);
+        loaded = true;
       } catch (err) {
-        console.error('Failed reading database.json, resetting to defaults', err);
+        console.warn('Failed reading /tmp/database.json, falling back to repository file', err);
+      }
+    }
+
+    if (!loaded) {
+      if (fs.existsSync(DB_FILE)) {
+        try {
+          const raw = fs.readFileSync(DB_FILE, 'utf-8');
+          this.data = JSON.parse(raw);
+        } catch (err) {
+          console.error('Failed reading database.json, resetting to defaults', err);
+          this.data = DEFAULT_DATA;
+          this.save();
+        }
+      } else {
         this.data = DEFAULT_DATA;
         this.save();
       }
-    } else {
-      this.data = DEFAULT_DATA;
-      this.save();
     }
 
     // Ensure landing page fields exist
@@ -582,8 +609,7 @@ class Database {
       for (const el of layout.elements) {
         if (
           el.id === 'elem-hero-image' ||
-          el.type === 'image' ||
-          el.name?.toLowerCase().includes('hero')
+          (el.type === 'image' && el.name?.toLowerCase().includes('hero'))
         ) {
           if (el.imageUrl !== heroUrl) {
             el.imageUrl = heroUrl;
@@ -602,6 +628,16 @@ class Database {
   }
 
   public reload() {
+    const tmpDbFile = path.join('/tmp', 'database.json');
+    if (fs.existsSync(tmpDbFile)) {
+      try {
+        const raw = fs.readFileSync(tmpDbFile, 'utf-8');
+        this.data = JSON.parse(raw);
+        return;
+      } catch {
+        // fallback
+      }
+    }
     if (fs.existsSync(DB_FILE)) {
       try {
         const raw = fs.readFileSync(DB_FILE, 'utf-8');
@@ -613,10 +649,22 @@ class Database {
   }
 
   private save() {
+    let savedToPrimary = false;
     try {
       fs.writeFileSync(DB_FILE, JSON.stringify(this.data, null, 2), 'utf-8');
+      savedToPrimary = true;
     } catch (err) {
-      console.error('Failed writing to database.json', err);
+      // In read-only environments (e.g. Vercel serverless function), DB_FILE is not writable
+    }
+
+    // Always mirror to /tmp in serverless environments as resilient fallback
+    try {
+      const tmpDbFile = path.join('/tmp', 'database.json');
+      fs.writeFileSync(tmpDbFile, JSON.stringify(this.data, null, 2), 'utf-8');
+    } catch (tmpErr) {
+      if (!savedToPrimary) {
+        console.warn('Cannot write database to disk in read-only environment:', tmpErr);
+      }
     }
   }
 
@@ -630,7 +678,8 @@ class Database {
       settings.heroImage = persistHeroImageToStaticAssets(settings.heroImage);
     }
 
-    this.data.settings = { ...this.data.settings, ...settings };
+    const now = new Date().toISOString();
+    this.data.settings = { ...this.data.settings, ...settings, updatedAt: now };
 
     // Synchronize hero image and visual properties to published and draft landing page layouts
     if (settings.heroImage !== undefined) {
@@ -644,8 +693,7 @@ class Database {
         for (const el of layout.elements) {
           if (
             el.id === 'elem-hero-image' ||
-            el.type === 'image' ||
-            el.name?.toLowerCase().includes('hero')
+            (el.type === 'image' && el.name?.toLowerCase().includes('hero'))
           ) {
             el.imageUrl = newImg;
             if (newPos) el.imagePosition = newPos;
@@ -656,7 +704,7 @@ class Database {
           }
         }
         if (changed) {
-          layout.updatedAt = new Date().toISOString();
+          layout.updatedAt = now;
         }
       };
 
@@ -1108,7 +1156,11 @@ class Database {
     this.data.landingPageDraft = JSON.parse(JSON.stringify(publishedLayout));
 
     // Also sync published hero image back to site settings
-    const heroEl = publishedLayout.elements.find((el) => el.id === 'elem-hero-image' || el.type === 'image');
+    const heroEl =
+      publishedLayout.elements.find((el) => el.id === 'elem-hero-image') ||
+      publishedLayout.elements.find((el) => el.name?.toLowerCase().includes('hero') && el.imageUrl) ||
+      publishedLayout.elements.find((el) => el.type === 'image' && el.imageUrl);
+
     if (heroEl && heroEl.imageUrl) {
       const stableHero = persistHeroImageToStaticAssets(heroEl.imageUrl);
       heroEl.imageUrl = stableHero;
@@ -1120,6 +1172,8 @@ class Database {
         this.data.settings.heroImageCrop = (heroEl.imageCrop === 'fill' ? 'cover' : heroEl.imageCrop) as 'cover' | 'contain' | 'custom';
       }
     }
+
+    this.data.settings.updatedAt = new Date().toISOString();
 
     if (!this.data.landingPageVersions) {
       this.data.landingPageVersions = [];

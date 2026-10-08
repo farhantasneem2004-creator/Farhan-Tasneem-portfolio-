@@ -60,7 +60,13 @@ const getAuthHeaders = () => {
 export const api = {
   // Public
   async getPublicPortfolio(): Promise<PublicPortfolioData> {
-    const res = await fetch('/api/public/portfolio');
+    const res = await fetch(`/api/public/portfolio?t=${Date.now()}`, {
+      cache: 'no-store',
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache'
+      }
+    });
     if (!res.ok) throw new Error('Failed to fetch portfolio data');
     return res.json();
   },

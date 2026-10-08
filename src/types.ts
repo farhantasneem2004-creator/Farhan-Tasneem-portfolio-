@@ -18,6 +18,7 @@ export interface SiteSettings {
   seoTitle: string;
   seoDescription: string;
   faviconUrl?: string;
+  updatedAt?: string;
   lightingMode?: 'cinematic-gold' | 'cyber-cyan' | 'radiant-amber' | 'deep-violet' | 'emerald-glow' | 'custom';
   lightingIntensity?: number; // 0.3 to 1.5, default 1
   lightingGlowColor?: string; // hex

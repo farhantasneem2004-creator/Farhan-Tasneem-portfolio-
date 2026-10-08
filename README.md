@@ -55,6 +55,38 @@ npm run start
 
 ---
 
+## Deploying to Vercel (via GitHub)
+
+This project has been fine-tuned for one-click hosting on Vercel with zero extra configuration.
+
+### 1. Push to GitHub
+Initialize your Git repository and push all files to GitHub:
+```bash
+git init
+git add .
+git commit -m "Initial commit - Farhan Tasneem Portfolio"
+git branch -M main
+git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPOSITORY.git
+git push -u origin main
+```
+
+### 2. Import into Vercel
+1. Go to [vercel.com](https://vercel.com) and log in with your GitHub account.
+2. Click **"Add New..."** -> **"Project"**.
+3. Select your GitHub repository from the list and click **"Import"**.
+4. Vercel will automatically detect the configuration from `vercel.json` and `package.json`:
+   - **Framework Preset**: Vite
+   - **Build Command**: `npm run build`
+   - **Output Directory**: `dist`
+5. *(Optional)* In the **Environment Variables** section, you can add:
+   - `JWT_SECRET`: `your_secure_custom_secret`
+6. Click **"Deploy"**.
+
+Your full-stack portfolio will be live at `https://your-project.vercel.app` with both frontend pages and serverless API endpoints fully operational!
+
+---
+
 ## Admin Credentials
-- Default Admin Email: `admin@example.com` or your configured email in settings
-- Access the Admin Dashboard by clicking the lock/admin icon in the navigation bar or footer.
+- Default Admin Email: `farhantasneem2004@gmail.com`
+- Default Admin Password: `AdminFarhan2026!`
+- Access the Admin Dashboard via `#admin` or by clicking the admin icon in the navigation bar or footer.

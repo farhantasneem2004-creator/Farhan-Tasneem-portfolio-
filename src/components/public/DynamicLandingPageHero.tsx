@@ -35,27 +35,38 @@ const HeroImageElement: React.FC<{
   elemStyle: React.CSSProperties;
   props: any;
   settings?: SiteSettings;
-}> = ({ element, elemStyle, props, settings }) => {
+  versionTimestamp?: string | number;
+}> = ({ element, elemStyle, props, settings, versionTimestamp }) => {
   // Dynamically resolve the most current hero portrait across visual editor & site settings
   const getEffectiveImage = () => {
-    if (element.id === 'elem-hero-image' || element.type === 'image') {
-      if (settings?.heroImage && settings.heroImage !== DEFAULT_HERO_PORTRAIT) {
-        return settings.heroImage;
-      }
-      if (element.imageUrl && element.imageUrl !== DEFAULT_HERO_PORTRAIT) {
+    const isHeroTarget = element.id === 'elem-hero-image' || element.name?.toLowerCase().includes('hero');
+    if (isHeroTarget) {
+      if (element.imageUrl && element.imageUrl.trim() && element.imageUrl !== DEFAULT_HERO_PORTRAIT) {
         return element.imageUrl;
       }
-      return settings?.heroImage || element.imageUrl || DEFAULT_HERO_PORTRAIT;
+      if (settings?.heroImage && settings.heroImage.trim() && settings.heroImage !== DEFAULT_HERO_PORTRAIT) {
+        return settings.heroImage;
+      }
+      return element.imageUrl || settings?.heroImage || DEFAULT_HERO_PORTRAIT;
     }
     return element.imageUrl || settings?.heroImage || DEFAULT_HERO_PORTRAIT;
   };
 
-  const initialUrl = getOptimizedImageUrl(getEffectiveImage());
-  const [imgSrc, setImgSrc] = useState<string>(initialUrl);
+  const getUrlWithVersion = (rawUrl?: string | null) => {
+    const optimized = getOptimizedImageUrl(rawUrl);
+    if (!versionTimestamp || optimized.startsWith('data:image') || optimized.startsWith('blob:')) {
+      return optimized;
+    }
+    const cleanUrl = optimized.split('?')[0];
+    const ts = typeof versionTimestamp === 'string' ? new Date(versionTimestamp).getTime() || versionTimestamp : versionTimestamp;
+    return `${cleanUrl}?v=${ts}`;
+  };
+
+  const [imgSrc, setImgSrc] = useState<string>(() => getUrlWithVersion(getEffectiveImage()));
 
   useEffect(() => {
-    setImgSrc(getOptimizedImageUrl(getEffectiveImage()));
-  }, [element.imageUrl, settings?.heroImage, element.id, element.type]);
+    setImgSrc(getUrlWithVersion(getEffectiveImage()));
+  }, [element.imageUrl, settings?.heroImage, element.id, element.type, versionTimestamp]);
 
   const handleImgError = () => {
     if (imgSrc !== DEFAULT_HERO_PORTRAIT) {
@@ -395,6 +406,7 @@ export const DynamicLandingPageHero: React.FC<DynamicLandingPageHeroProps> = ({
                   elemStyle={elemStyle}
                   props={props}
                   settings={settings}
+                  versionTimestamp={layout.updatedAt || settings?.updatedAt}
                 />
               );
 

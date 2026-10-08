@@ -41,13 +41,23 @@ export const Hero: React.FC<HeroProps> = ({
     );
   }
 
-  // Resilient image source with multi-tier fallback
-  const initialImage = getOptimizedImageUrl(settings?.heroImage);
-  const [currentImage, setCurrentImage] = useState<string>(initialImage);
+  // Resilient image source with multi-tier fallback and cross-device version cache-busting
+  const versionTimestamp = settings?.updatedAt || 'v1';
+  const getUrlWithVersion = (rawUrl?: string | null) => {
+    const optimized = getOptimizedImageUrl(rawUrl);
+    if (!versionTimestamp || optimized.startsWith('data:image') || optimized.startsWith('blob:')) {
+      return optimized;
+    }
+    const cleanUrl = optimized.split('?')[0];
+    const ts = typeof versionTimestamp === 'string' ? new Date(versionTimestamp).getTime() || versionTimestamp : versionTimestamp;
+    return `${cleanUrl}?v=${ts}`;
+  };
+
+  const [currentImage, setCurrentImage] = useState<string>(() => getUrlWithVersion(settings?.heroImage));
 
   useEffect(() => {
-    setCurrentImage(getOptimizedImageUrl(settings?.heroImage));
-  }, [settings?.heroImage]);
+    setCurrentImage(getUrlWithVersion(settings?.heroImage));
+  }, [settings?.heroImage, settings?.updatedAt]);
 
   const handleImageError = () => {
     if (currentImage !== DEFAULT_HERO_PORTRAIT) {
