@@ -10,6 +10,7 @@ import {
   FolderOpen
 } from 'lucide-react';
 import type { GalleryCategory, GalleryAlbum, GalleryImage } from '../../types.js';
+import { ScrollReveal } from '../common/ScrollReveal.js';
 
 interface GallerySectionProps {
   categories?: GalleryCategory[];
@@ -62,92 +63,94 @@ export const GallerySection: React.FC<GallerySectionProps> = ({
       <div className="max-w-7xl mx-auto px-6 sm:px-8">
         
         {/* Header */}
-        <div className="max-w-3xl mb-12">
-          <div className="inline-flex items-center gap-2 mb-3">
-            <span className="w-6 h-[2px]" style={{ backgroundColor: accentColor }} />
-            <span className="text-xs uppercase tracking-[0.2em] font-semibold text-[#9ca3af]">
-              Visual Journal & Photography
-            </span>
+        <ScrollReveal delay={50}>
+          <div className="max-w-3xl mb-12">
+            <div className="inline-flex items-center gap-2 mb-3">
+              <span className="w-6 h-[2px]" style={{ backgroundColor: accentColor }} />
+              <span className="text-xs uppercase tracking-[0.2em] font-semibold text-[#9ca3af]">
+                Visual Journal & Photography
+              </span>
+            </div>
+            <h2 className="font-display font-bold text-3xl sm:text-4xl text-white tracking-tight leading-tight mb-4">
+              Personal Gallery & Moments
+            </h2>
+            <p className="text-sm sm:text-base text-[#9ca3af] leading-relaxed">
+              Moments, university competitions, street architecture, and visual memories captured through the lens.
+            </p>
           </div>
-          <h2 className="font-display font-bold text-3xl sm:text-4xl text-white tracking-tight leading-tight mb-4">
-            Personal Gallery & Moments
-          </h2>
-          <p className="text-sm sm:text-base text-[#9ca3af] leading-relaxed">
-            Moments, university competitions, street architecture, and visual memories captured through the lens.
-          </p>
-        </div>
 
-        {/* Filters Controls */}
-        <div className="space-y-4 mb-10">
-          {/* Category Tabs */}
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              onClick={() => {
-                setSelectedCategory('all');
-                setSelectedAlbum('all');
-              }}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
-                selectedCategory === 'all' && selectedAlbum === 'all'
-                  ? 'bg-amber-500/20 text-white border border-amber-500/50'
-                  : 'bg-[#12151b] text-[#9ca3af] hover:text-white border border-[#222732]'
-              }`}
-              style={
-                selectedCategory === 'all' && selectedAlbum === 'all'
-                  ? { backgroundColor: `${accentColor}25`, borderColor: `${accentColor}70` }
-                  : {}
-              }
-            >
-              All Photos ({visibleImages.length})
-            </button>
-
-            {visibleCategories.map((cat) => (
+          {/* Filters Controls */}
+          <div className="space-y-4 mb-10">
+            {/* Category Tabs */}
+            <div className="flex flex-wrap items-center gap-2">
               <button
-                key={cat.id}
                 onClick={() => {
-                  setSelectedCategory(cat.id);
+                  setSelectedCategory('all');
                   setSelectedAlbum('all');
                 }}
-                className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
-                  selectedCategory === cat.id
+                className={`btn-interactive px-3.5 py-1.5 rounded-lg text-xs font-medium cursor-pointer ${
+                  selectedCategory === 'all' && selectedAlbum === 'all'
                     ? 'bg-amber-500/20 text-white border border-amber-500/50'
                     : 'bg-[#12151b] text-[#9ca3af] hover:text-white border border-[#222732]'
                 }`}
                 style={
-                  selectedCategory === cat.id
+                  selectedCategory === 'all' && selectedAlbum === 'all'
                     ? { backgroundColor: `${accentColor}25`, borderColor: `${accentColor}70` }
                     : {}
                 }
               >
-                {cat.name}
+                All Photos ({visibleImages.length})
               </button>
-            ))}
-          </div>
 
-          {/* Album Selector Chips */}
-          {visibleAlbums.length > 0 && (
-            <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-[#1a202c]">
-              <span className="text-xs text-[#6b7280] flex items-center gap-1 mr-1">
-                <FolderOpen className="w-3.5 h-3.5" />
-                <span>Albums:</span>
-              </span>
-              {visibleAlbums.map((alb) => (
+              {visibleCategories.map((cat) => (
                 <button
-                  key={alb.id}
+                  key={cat.id}
                   onClick={() => {
-                    setSelectedAlbum(selectedAlbum === alb.id ? 'all' : alb.id);
+                    setSelectedCategory(cat.id);
+                    setSelectedAlbum('all');
                   }}
-                  className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all cursor-pointer ${
-                    selectedAlbum === alb.id
-                      ? 'bg-amber-500/30 text-amber-200 border border-amber-500/60'
-                      : 'bg-[#151922] text-[#8692a6] hover:text-white border border-[#222938]'
+                  className={`btn-interactive px-3.5 py-1.5 rounded-lg text-xs font-medium cursor-pointer ${
+                    selectedCategory === cat.id
+                      ? 'bg-amber-500/20 text-white border border-amber-500/50'
+                      : 'bg-[#12151b] text-[#9ca3af] hover:text-white border border-[#222732]'
                   }`}
+                  style={
+                    selectedCategory === cat.id
+                      ? { backgroundColor: `${accentColor}25`, borderColor: `${accentColor}70` }
+                      : {}
+                  }
                 >
-                  {alb.title}
+                  {cat.name}
                 </button>
               ))}
             </div>
-          )}
-        </div>
+
+            {/* Album Selector Chips */}
+            {visibleAlbums.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-[#1a202c]">
+                <span className="text-xs text-[#6b7280] flex items-center gap-1 mr-1">
+                  <FolderOpen className="w-3.5 h-3.5" />
+                  <span>Albums:</span>
+                </span>
+                {visibleAlbums.map((alb) => (
+                  <button
+                    key={alb.id}
+                    onClick={() => {
+                      setSelectedAlbum(selectedAlbum === alb.id ? 'all' : alb.id);
+                    }}
+                    className={`btn-interactive px-2.5 py-1 rounded-md text-[11px] font-medium cursor-pointer ${
+                      selectedAlbum === alb.id
+                        ? 'bg-amber-500/30 text-amber-200 border border-amber-500/60'
+                        : 'bg-[#151922] text-[#8692a6] hover:text-white border border-[#222938]'
+                    }`}
+                  >
+                    {alb.title}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </ScrollReveal>
 
         {/* Gallery Grid (Responsive Masonry-like layout) */}
         {filteredImages.length === 0 ? (
@@ -161,59 +164,62 @@ export const GallerySection: React.FC<GallerySectionProps> = ({
               const category = visibleCategories.find((c) => c.id === img.categoryId);
 
               return (
-                <div
-                  key={img.id}
-                  onClick={() => setLightboxIndex(idx)}
-                  className="group relative rounded-xl overflow-hidden bg-[#11141c] border border-[#1f2533] cursor-pointer shadow-lg hover:border-[#353f54] transition-all duration-300 flex flex-col"
-                >
-                  <div className="relative aspect-[4/3] overflow-hidden bg-[#0c0e12]">
-                    <img
-                      src={img.url}
-                      alt={img.title}
-                      referrerPolicy="no-referrer"
-                      loading="lazy"
-                      className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#0c0e12]/90 via-black/20 to-transparent opacity-80 group-hover:opacity-95 transition-opacity" />
+                <ScrollReveal key={img.id} delay={(idx % 3) * 80}>
+                  <div
+                    onClick={() => setLightboxIndex(idx)}
+                    className="card-interactive group relative rounded-xl overflow-hidden bg-[#11141c] border border-[#1f2533] cursor-pointer shadow-lg hover:border-[#353f54] flex flex-col"
+                  >
+                    <div className="relative aspect-[4/3] overflow-hidden bg-[#0c0e12]">
+                      <img
+                        src={img.url}
+                        alt={img.title}
+                        referrerPolicy="no-referrer"
+                        loading="lazy"
+                        className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                      />
+                      {/* Subtle lighting gleam */}
+                      <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.02] to-white/[0.06] opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#0c0e12]/90 via-black/20 to-transparent opacity-80 group-hover:opacity-95 transition-opacity" />
 
-                    {/* Quick Expand Icon */}
-                    <div className="absolute top-3 right-3 p-2 rounded-lg bg-black/50 backdrop-blur-sm text-white/80 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Maximize2 className="w-3.5 h-3.5" />
+                      {/* Quick Expand Icon */}
+                      <div className="absolute top-3 right-3 p-2 rounded-lg bg-black/50 backdrop-blur-sm text-white/80 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Maximize2 className="w-3.5 h-3.5" />
+                      </div>
+
+                      {/* Bottom overlay details */}
+                      <div className="absolute inset-x-0 bottom-0 p-4">
+                        {category && (
+                          <span className="text-[10px] font-semibold uppercase tracking-wider text-amber-400 block mb-1" style={{ color: accentColor }}>
+                            {category.name}
+                          </span>
+                        )}
+                        <h4 className="font-semibold text-sm text-white line-clamp-1 mb-1 group-hover:text-amber-300 transition-colors">
+                          {img.title}
+                        </h4>
+                        {img.caption && (
+                          <p className="text-xs text-[#9ca3af] line-clamp-2 leading-relaxed">
+                            {img.caption}
+                          </p>
+                        )}
+                      </div>
                     </div>
 
-                    {/* Bottom overlay details */}
-                    <div className="absolute inset-x-0 bottom-0 p-4">
-                      {category && (
-                        <span className="text-[10px] font-semibold uppercase tracking-wider text-amber-400 block mb-1" style={{ color: accentColor }}>
-                          {category.name}
-                        </span>
-                      )}
-                      <h4 className="font-semibold text-sm text-white line-clamp-1 mb-1">
-                        {img.title}
-                      </h4>
-                      {img.caption && (
-                        <p className="text-xs text-[#9ca3af] line-clamp-2 leading-relaxed">
-                          {img.caption}
-                        </p>
-                      )}
-                    </div>
+                    {/* Bottom info strip */}
+                    {(img.location || img.date || album) && (
+                      <div className="px-4 py-2 bg-[#0e1118] border-t border-[#1c2230] flex items-center justify-between text-[11px] text-[#6b7280]">
+                        {img.location ? (
+                          <span className="flex items-center gap-1">
+                            <MapPin className="w-3 h-3 text-amber-400/80" style={{ color: accentColor }} />
+                            <span>{img.location}</span>
+                          </span>
+                        ) : (
+                          <span>{album ? album.title : ''}</span>
+                        )}
+                        {img.date && <span>{img.date}</span>}
+                      </div>
+                    )}
                   </div>
-
-                  {/* Bottom info strip */}
-                  {(img.location || img.date || album) && (
-                    <div className="px-4 py-2 bg-[#0e1118] border-t border-[#1c2230] flex items-center justify-between text-[11px] text-[#6b7280]">
-                      {img.location ? (
-                        <span className="flex items-center gap-1">
-                          <MapPin className="w-3 h-3 text-amber-400/80" style={{ color: accentColor }} />
-                          <span>{img.location}</span>
-                        </span>
-                      ) : (
-                        <span>{album ? album.title : ''}</span>
-                      )}
-                      {img.date && <span>{img.date}</span>}
-                    </div>
-                  )}
-                </div>
+                </ScrollReveal>
               );
             })}
           </div>

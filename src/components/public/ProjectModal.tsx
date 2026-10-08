@@ -27,7 +27,7 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({ project, onClose, ac
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-[#9ca3af] hover:text-white hover:bg-[#1a202d] transition-colors"
+            className="btn-interactive p-1.5 rounded-lg text-[#9ca3af] hover:text-white hover:bg-[#1a202d] cursor-pointer"
             aria-label="Close modal"
           >
             <X className="w-5 h-5" />
@@ -74,7 +74,7 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({ project, onClose, ac
                   href={project.liveDemoUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold text-[#0c0e12] transition-colors"
+                  className="btn-interactive inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold text-[#0c0e12]"
                   style={{ backgroundColor: accentColor }}
                 >
                   <span>Launch Live Demo</span>
@@ -86,7 +86,7 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({ project, onClose, ac
                   href={project.githubUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold text-white bg-[#1a202d] border border-[#2c3547] hover:border-amber-500/50 transition-colors"
+                  className="btn-interactive inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold text-white bg-[#1a202d] border border-[#2c3547] hover:border-amber-500/50"
                 >
                   <Github className="w-4 h-4" />
                   <span>View Source Code</span>

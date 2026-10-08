@@ -31,6 +31,7 @@ import { GallerySection } from './components/public/GallerySection.js';
 import { ContactSection } from './components/public/ContactSection.js';
 import { Footer } from './components/public/Footer.js';
 import { ProjectModal } from './components/public/ProjectModal.js';
+import { BackgroundDoodles } from './components/public/BackgroundDoodles.js';
 
 // Admin Components
 import { AdminLogin } from './components/admin/AdminLogin.js';
@@ -148,6 +149,19 @@ export default function App() {
     window.addEventListener('hashchange', handleHashChange);
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
+
+  // Synchronize browser tab icon (favicon) from site settings
+  useEffect(() => {
+    if (settings?.faviconUrl) {
+      let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement | null;
+      if (!link) {
+        link = document.createElement('link');
+        link.rel = 'icon';
+        document.head.appendChild(link);
+      }
+      link.href = settings.faviconUrl;
+    }
+  }, [settings?.faviconUrl]);
 
   const handleLoginSuccess = () => {
     setIsAuthenticated(true);
@@ -413,8 +427,21 @@ export default function App() {
     }
   };
 
+  const glowColor = settings.lightingGlowColor || accentColor;
+  const lightingIntensity = settings.lightingIntensity ?? 1;
+  const enable3D = settings.enableObject3DLighting !== false;
+
   return (
-    <div className="min-h-screen bg-[#0c0e12] text-[#f3f4f6] selection:bg-[#e5a93c]/30 selection:text-white">
+    <div className="min-h-screen bg-[#0c0e12] text-[#f3f4f6] selection:bg-[#e5a93c]/30 selection:text-white relative">
+      {/* Ambient Background Technical Doodles & CFC Watermarks */}
+      <BackgroundDoodles
+        accentColor={accentColor}
+        glowColor={glowColor}
+        intensity={lightingIntensity}
+        keywords={settings.backgroundDoodleKeywords}
+        enabled={settings.showBackgroundDoodles !== false}
+      />
+
       {/* Top Navigation */}
       <Navbar
         settings={settings}
@@ -453,6 +480,9 @@ export default function App() {
           <SkillsSection
             skills={skills}
             accentColor={accentColor}
+            glowColor={glowColor}
+            lightingIntensity={lightingIntensity}
+            enable3D={enable3D}
           />
         )}
 
@@ -461,6 +491,9 @@ export default function App() {
             projects={projects}
             onSelectProject={setSelectedProject}
             accentColor={accentColor}
+            glowColor={glowColor}
+            lightingIntensity={lightingIntensity}
+            enable3D={enable3D}
           />
         )}
 
@@ -483,6 +516,9 @@ export default function App() {
           <CertificationsSection
             certifications={certifications}
             accentColor={accentColor}
+            glowColor={glowColor}
+            lightingIntensity={lightingIntensity}
+            enable3D={enable3D}
           />
         )}
 
@@ -490,6 +526,9 @@ export default function App() {
           <ServicesSection
             services={services}
             accentColor={accentColor}
+            glowColor={glowColor}
+            lightingIntensity={lightingIntensity}
+            enable3D={enable3D}
           />
         )}
 

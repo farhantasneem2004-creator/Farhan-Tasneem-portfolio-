@@ -56,7 +56,7 @@ export const Footer: React.FC<FooterProps> = ({
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={link.label}
-                className="p-2 rounded-lg text-[#9ca3af] hover:text-white bg-[#11141c] border border-[#202636] hover:border-amber-500/40 transition-colors"
+                className="btn-interactive p-2 rounded-lg text-[#9ca3af] hover:text-white bg-[#11141c] border border-[#202636] hover:border-amber-500/40"
               >
                 <DynamicIcon name={link.platform} className="w-4 h-4" />
               </a>
@@ -74,7 +74,7 @@ export const Footer: React.FC<FooterProps> = ({
             {settings.publicCvDownload && (
               <button
                 onClick={onDownloadCv}
-                className="hover:text-white transition-colors flex items-center gap-1 cursor-pointer"
+                className="btn-interactive hover:text-white flex items-center gap-1 cursor-pointer py-1 px-2 rounded-md hover:bg-white/[0.03]"
               >
                 <Download className="w-3.5 h-3.5 text-amber-400" style={{ color: accent }} />
                 <span>Curriculum Vitae</span>
@@ -83,7 +83,7 @@ export const Footer: React.FC<FooterProps> = ({
 
             <button
               onClick={onOpenAdmin}
-              className="hover:text-white transition-colors flex items-center gap-1 cursor-pointer"
+              className="btn-interactive hover:text-white flex items-center gap-1 cursor-pointer py-1 px-2 rounded-md hover:bg-white/[0.03]"
               title="Admin Portal"
             >
               <Shield className="w-3.5 h-3.5 text-amber-400/70" />
@@ -92,7 +92,7 @@ export const Footer: React.FC<FooterProps> = ({
 
             <button
               onClick={scrollToTop}
-              className="p-1.5 rounded bg-[#13161f] border border-[#202534] hover:text-white transition-colors"
+              className="btn-interactive p-1.5 rounded bg-[#13161f] border border-[#202534] hover:text-white cursor-pointer"
               title="Scroll to top"
             >
               <ArrowUp className="w-3.5 h-3.5" />

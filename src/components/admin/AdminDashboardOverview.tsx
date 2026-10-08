@@ -8,9 +8,11 @@ import {
   GraduationCap,
   ArrowRight,
   ExternalLink,
-  Plus
+  Plus,
+  Download,
+  FolderArchive
 } from 'lucide-react';
-import type { AdminStats } from '../../api.js';
+import { api, type AdminStats } from '../../api.js';
 import type { ContactMessage } from '../../types.js';
 
 interface AdminDashboardOverviewProps {
@@ -90,6 +92,15 @@ export const AdminDashboardOverview: React.FC<AdminDashboardOverviewProps> = ({
 
         <div className="flex items-center gap-3">
           <button
+            onClick={() => api.downloadProjectZip()}
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold bg-[#181f2c] hover:bg-[#20293a] border border-[#273347] text-[#f3f4f6] hover:text-white cursor-pointer shadow transition-all"
+            title="Download full project source code, database, and assets as a .ZIP file"
+          >
+            <FolderArchive className="w-3.5 h-3.5 text-amber-400" />
+            <span>Download Project (.ZIP)</span>
+          </button>
+
+          <button
             onClick={() => onNavigate('cv-builder')}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold text-[#0c0e12] cursor-pointer shadow"
             style={{ backgroundColor: accentColor }}
@@ -98,6 +109,35 @@ export const AdminDashboardOverview: React.FC<AdminDashboardOverviewProps> = ({
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>
+      </div>
+
+      {/* Full Project Export Banner */}
+      <div className="p-4 rounded-xl bg-gradient-to-r from-[#121620] via-[#10141d] to-[#121620] border border-[#21293a] flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
+        <div className="flex items-center gap-3.5">
+          <div className="p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 shrink-0">
+            <FolderArchive className="w-5 h-5" />
+          </div>
+          <div>
+            <h4 className="text-xs font-semibold text-white flex items-center gap-2">
+              <span>Full Project Source Code & Database Export</span>
+              <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                1-Click .ZIP
+              </span>
+            </h4>
+            <p className="text-[11px] text-[#848ea0] mt-0.5">
+              Instantly download the complete source code, React components, Tailwind styling, Express API, uploads, and JSON database to your PC.
+            </p>
+          </div>
+        </div>
+
+        <button
+          onClick={() => api.downloadProjectZip()}
+          className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold text-[#0c0e12] hover:brightness-110 cursor-pointer shadow whitespace-nowrap shrink-0 transition-all"
+          style={{ backgroundColor: accentColor }}
+        >
+          <Download className="w-3.5 h-3.5" />
+          <span>Download .ZIP</span>
+        </button>
       </div>
 
       {/* Metrics Row */}

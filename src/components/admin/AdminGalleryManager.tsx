@@ -45,7 +45,7 @@ export const AdminGalleryManager: React.FC<AdminGalleryManagerProps> = ({
     setFormData({
       title: '',
       caption: '',
-      url: '/src/assets/images/workspace_editorial_1789381777509.jpg',
+      url: '/images/workspace_editorial_1789381777509.jpg',
       thumbnailUrl: '',
       categoryId: (categories || [])[0]?.id || 'cat_photography',
       albumId: (albums || [])[0]?.id || 'alb_dhaka',

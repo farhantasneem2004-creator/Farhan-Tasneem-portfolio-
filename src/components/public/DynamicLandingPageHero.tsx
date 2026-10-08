@@ -36,9 +36,15 @@ const HeroImageElement: React.FC<{
   props: any;
   settings?: SiteSettings;
 }> = ({ element, elemStyle, props, settings }) => {
-  // If settings.heroImage is present, prioritize it for the hero image element so updates in admin reflect immediately
+  // Dynamically resolve the most current hero portrait across visual editor & site settings
   const getEffectiveImage = () => {
     if (element.id === 'elem-hero-image' || element.type === 'image') {
+      if (settings?.heroImage && settings.heroImage !== DEFAULT_HERO_PORTRAIT) {
+        return settings.heroImage;
+      }
+      if (element.imageUrl && element.imageUrl !== DEFAULT_HERO_PORTRAIT) {
+        return element.imageUrl;
+      }
       return settings?.heroImage || element.imageUrl || DEFAULT_HERO_PORTRAIT;
     }
     return element.imageUrl || settings?.heroImage || DEFAULT_HERO_PORTRAIT;
@@ -78,7 +84,7 @@ const HeroImageElement: React.FC<{
           ? `${element.borderWidth}px ${element.borderStyle || 'solid'} ${element.borderColor || '#2e3544'}`
           : '1px solid #2e3544'
       }}
-      className="relative overflow-hidden bg-[#12151b] shadow-2xl shadow-black/70 group"
+      className="relative overflow-hidden bg-[#12151b] shadow-2xl shadow-black/70 group transition-all duration-500 hover:shadow-black/90"
     >
       <img
         src={imgSrc}
@@ -93,6 +99,8 @@ const HeroImageElement: React.FC<{
           objectPosition: effectivePosition
         }}
       />
+      {/* Specular lighting sheen on hover */}
+      <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.03] to-white/[0.08] opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
       {/* Subtle bottom gradient for depth */}
       <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[#0c0e12]/80 to-transparent pointer-events-none" />
     </div>
@@ -214,6 +222,22 @@ export const DynamicLandingPageHero: React.FC<DynamicLandingPageHeroProps> = ({
         minHeight: `${scaledHeight + 90}px`
       }}
     >
+      {/* Atmospheric Depth: Ultra-sparse ambient floating particles */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden z-[2]">
+        <div
+          className="atmospheric-particle absolute w-1.5 h-1.5 rounded-full blur-[0.5px]"
+          style={{ top: '25%', left: '15%', backgroundColor: accent, opacity: 0.3, animationDelay: '0s' }}
+        />
+        <div
+          className="atmospheric-particle absolute w-1 h-1 rounded-full blur-[0.5px]"
+          style={{ top: '68%', left: '30%', backgroundColor: '#94a3b8', opacity: 0.2, animationDelay: '4s' }}
+        />
+        <div
+          className="atmospheric-particle absolute w-2 h-2 rounded-full blur-[1px]"
+          style={{ top: '30%', right: '20%', backgroundColor: accent, opacity: 0.25, animationDelay: '7s' }}
+        />
+      </div>
+
       {/* Background Architectural Subtle Ambient Grid */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#161922_1px,transparent_1px),linear-gradient(to_bottom,#161922_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_70%_60%_at_50%_45%,#000_65%,transparent_100%)] opacity-20 pointer-events-none" />
 
@@ -355,7 +379,7 @@ export const DynamicLandingPageHero: React.FC<DynamicLandingPageHeroProps> = ({
                     fontSize: `${props.fontSize || 14}px`,
                     fontWeight: props.fontWeight || '600'
                   }}
-                  className="flex items-center justify-center gap-2 cursor-pointer shadow-md hover:brightness-105 active:scale-95 transition-all"
+                  className="btn-interactive flex items-center justify-center gap-2 cursor-pointer shadow-md hover:brightness-105"
                 >
                   <span>{element.content || 'Click Here'}</span>
                   {element.iconName && renderPublicIcon(element.iconName, 'w-4 h-4')}

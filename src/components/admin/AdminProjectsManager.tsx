@@ -41,7 +41,7 @@ export const AdminProjectsManager: React.FC<AdminProjectsManagerProps> = ({
       name: '',
       shortDescription: '',
       detailedDescription: '',
-      mainImage: '/src/assets/images/efuture_cup_project_1789381795595.jpg',
+      mainImage: '/images/efuture_cup_project_1789381795595.jpg',
       additionalImages: [],
       technologies: ['React', 'TypeScript', 'Node.js', 'Tailwind CSS'],
       category: 'Full-Stack Web App',
@@ -166,7 +166,7 @@ export const AdminProjectsManager: React.FC<AdminProjectsManagerProps> = ({
             <div>
               <div className="relative aspect-video rounded-lg overflow-hidden mb-4 bg-[#0a0c10] border border-[#1d222f]">
                 <img
-                  src={proj.mainImage || '/src/assets/images/efuture_cup_project_1789381795595.jpg'}
+                  src={proj.mainImage || '/images/efuture_cup_project_1789381795595.jpg'}
                   alt={proj.name}
                   referrerPolicy="no-referrer"
                   className="w-full h-full object-cover"

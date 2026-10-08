@@ -75,7 +75,7 @@ const DEFAULT_DATA: DatabaseSchema = {
     seoTitle: 'Farhan Tasneem | CSE Student • Developer • Creative',
     seoDescription:
       'Personal portfolio and creative case studies of Farhan Tasneem, a CSE student, developer, and creative.',
-    aboutPhoto: '/src/assets/images/workspace_editorial_1789381777509.jpg',
+    aboutPhoto: '/images/workspace_editorial_1789381777509.jpg',
     aboutHeading: 'Turning ideas into meaningful digital experiences.',
     aboutShortBio:
       "I'm Farhan Tasneem, a passionate Computer Science and Engineering student. I enjoy solving problems through code, exploring new technologies, and creating things that make an impact.",
@@ -132,7 +132,7 @@ const DEFAULT_DATA: DatabaseSchema = {
         'A tournament management web application for creating and managing tournaments, participants, matches, tables and brackets.',
       detailedDescription:
         'eFuture Cup Manager is an end-to-end tournament operations and bracket orchestration web platform. Designed to eliminate manual administrative overhead, it provides automated knockout bracket seeding, round-robin table calculations, scheduled fixture generation, real-time match outcome recording, and participant profile rosters.',
-      mainImage: '/src/assets/images/efuture_cup_project_1789381795595.jpg',
+      mainImage: '/images/efuture_cup_project_1789381795595.jpg',
       additionalImages: [],
       technologies: ['React', 'TypeScript', 'Node.js', 'PostgreSQL', 'Tailwind CSS'],
       category: 'Web Application',
@@ -297,7 +297,7 @@ const DEFAULT_DATA: DatabaseSchema = {
       id: 'g-ws',
       title: 'Studio Workspace & Code Sessions',
       caption: 'Quiet morning focus with fresh code and coffee.',
-      url: '/src/assets/images/workspace_editorial_1789381777509.jpg',
+      url: '/images/workspace_editorial_1789381777509.jpg',
       categoryId: 'cat-photo',
       albumId: 'alb-proj',
       aspectRatio: 'landscape',
@@ -474,64 +474,47 @@ export function persistHeroImageToStaticAssets(inputUrlOrPath?: string | null): 
     return STATIC_HERO_IMAGE_PATH;
   }
   const trimmed = inputUrlOrPath.trim();
-  if (trimmed === STATIC_HERO_IMAGE_PATH || trimmed === '/images/hero/farhan-hero.jpg') {
+  if (!trimmed) {
     return STATIC_HERO_IMAGE_PATH;
   }
 
-  try {
-    let sourceFilePath: string | null = null;
-
-    if (trimmed.startsWith('/uploads/') || trimmed.startsWith('uploads/')) {
-      const filename = path.basename(trimmed);
-      const candidates = [
-        path.join(process.cwd(), 'uploads', filename),
-        path.join(process.cwd(), 'public', 'uploads', filename)
-      ];
-      for (const cand of candidates) {
-        if (fs.existsSync(cand) && fs.statSync(cand).isFile()) {
-          sourceFilePath = cand;
-          break;
-        }
-      }
-    } else if (trimmed.startsWith('/images/') || trimmed.startsWith('/farhan_hero_portrait')) {
-      const candidates = [
-        path.join(process.cwd(), 'public', trimmed.replace(/^\//, '')),
-        path.join(process.cwd(), trimmed.replace(/^\//, ''))
-      ];
-      for (const cand of candidates) {
-        if (fs.existsSync(cand) && fs.statSync(cand).isFile()) {
-          sourceFilePath = cand;
-          break;
-        }
-      }
-    } else if (trimmed.startsWith('/') || trimmed.startsWith('.')) {
-      const full = path.join(process.cwd(), trimmed.replace(/^\//, ''));
-      if (fs.existsSync(full) && fs.statSync(full).isFile()) {
-        sourceFilePath = full;
-      }
-    }
-
-    if (sourceFilePath) {
-      const publicHeroDir = path.join(process.cwd(), 'public', 'images', 'hero');
-      const srcHeroDir = path.join(process.cwd(), 'src', 'assets', 'images', 'hero');
-      fs.mkdirSync(publicHeroDir, { recursive: true });
-      fs.mkdirSync(srcHeroDir, { recursive: true });
-
-      const destPng = path.join(publicHeroDir, 'farhan-hero.png');
-      const destJpg = path.join(publicHeroDir, 'farhan-hero.jpg');
-      const destSrcPng = path.join(srcHeroDir, 'farhan-hero.png');
-
-      fs.copyFileSync(sourceFilePath, destPng);
-      fs.copyFileSync(sourceFilePath, destJpg);
-      fs.copyFileSync(sourceFilePath, destSrcPng);
-
-      return STATIC_HERO_IMAGE_PATH;
-    }
-  } catch (err) {
-    console.error('Failed to copy hero image to permanent static assets:', err);
+  // Preserve external URLs as-is
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('data:image')) {
+    return trimmed;
   }
 
-  return STATIC_HERO_IMAGE_PATH;
+  // Normalize and mirror uploaded file paths between uploads and public/uploads
+  if (trimmed.startsWith('/uploads/') || trimmed.startsWith('uploads/')) {
+    const filename = path.basename(trimmed);
+    const rootUpload = path.join(process.cwd(), 'uploads', filename);
+    const publicUpload = path.join(process.cwd(), 'public', 'uploads', filename);
+    try {
+      if (fs.existsSync(rootUpload) && !fs.existsSync(publicUpload)) {
+        const publicDir = path.join(process.cwd(), 'public', 'uploads');
+        if (!fs.existsSync(publicDir)) fs.mkdirSync(publicDir, { recursive: true });
+        fs.copyFileSync(rootUpload, publicUpload);
+      } else if (fs.existsSync(publicUpload) && !fs.existsSync(rootUpload)) {
+        const uploadsDir = path.join(process.cwd(), 'uploads');
+        if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+        fs.copyFileSync(publicUpload, rootUpload);
+      }
+    } catch (e) {
+      console.warn('Could not mirror hero upload:', e);
+    }
+    return trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+  }
+
+  // Map legacy /src/assets/images paths to /images
+  if (trimmed.startsWith('/src/assets/images/')) {
+    return trimmed.replace('/src/assets/images/', '/images/');
+  }
+
+  // Preserve local static paths
+  if (trimmed.startsWith('/images/') || trimmed.startsWith('images/')) {
+    return trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+  }
+
+  return trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
 }
 
 class Database {

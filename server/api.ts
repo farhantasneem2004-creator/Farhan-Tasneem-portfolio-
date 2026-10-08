@@ -6,6 +6,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { Document, Paragraph, TextRun, HeadingLevel, Packer, AlignmentType } from 'docx';
 import { jsPDF } from 'jspdf';
+import { ZipArchive } from 'archiver';
 import { db } from './db.js';
 import { generateCvPdf, generateCvDocx, CvExportOptions } from './cvExport.js';
 
@@ -64,6 +65,28 @@ function requireAuth(req: AuthRequest, res: Response, next: NextFunction) {
   }
 }
 
+function requireAuthOrQueryToken(req: AuthRequest, res: Response, next: NextFunction) {
+  let token = '';
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    token = authHeader.split(' ')[1];
+  } else if (typeof req.query.token === 'string') {
+    token = req.query.token;
+  }
+
+  if (!token) {
+    return res.status(401).json({ error: 'Unauthorized: Missing token' });
+  }
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET) as { email: string };
+    req.user = decoded;
+    next();
+  } catch (err) {
+    return res.status(401).json({ error: 'Unauthorized: Invalid or expired token' });
+  }
+}
+
 // ==========================================
 // 1. PUBLIC ROUTES
 // ==========================================
@@ -71,6 +94,7 @@ function requireAuth(req: AuthRequest, res: Response, next: NextFunction) {
 // Get entire public view (only visible items)
 router.get('/public/portfolio', (req: Request, res: Response) => {
   try {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     const settings = db.getSettings();
     const socialLinks = db.getSocialLinks().filter((l) => l.visible);
     const skills = db.getSkills().filter((s) => s.visible);
@@ -205,6 +229,7 @@ router.get('/admin/stats', requireAuth, (req: Request, res: Response) => {
 
 // Settings
 router.get('/admin/settings', requireAuth, (req: Request, res: Response) => {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
   res.json(db.getSettings());
 });
 
@@ -470,6 +495,12 @@ router.post('/upload', requireAuth, upload.single('file'), (req: Request, res: R
       fs.mkdirSync(publicUploadsDir, { recursive: true });
     }
     fs.copyFileSync(req.file.path, path.join(publicUploadsDir, req.file.filename));
+
+    // Also mirror to dist/uploads if dist exists (for production runs)
+    const distUploadsDir = path.join(process.cwd(), 'dist', 'uploads');
+    if (fs.existsSync(distUploadsDir)) {
+      fs.copyFileSync(req.file.path, path.join(distUploadsDir, req.file.filename));
+    }
   } catch (err) {
     console.warn('Could not mirror upload to public/uploads:', err);
   }
@@ -730,6 +761,67 @@ router.post('/admin/landing-page/reset', requireAuth, (req: Request, res: Respon
   } catch (err) {
     console.error('Failed to reset landing page:', err);
     res.status(500).json({ error: 'Failed to reset landing page' });
+  }
+});
+
+// Admin: Export entire project source code as a ZIP archive
+router.get('/admin/export-project-zip', requireAuthOrQueryToken, async (req: Request, res: Response) => {
+  try {
+    const rootDir = process.cwd();
+    const timestamp = new Date().toISOString().slice(0, 10);
+    const filename = `farhan-tasneem-portfolio-${timestamp}.zip`;
+
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+    const archive = new ZipArchive({
+      zlib: { level: 9 }
+    });
+
+    archive.on('warning', (err) => {
+      if (err.code === 'ENOENT') {
+        console.warn('Archiver warning:', err);
+      } else {
+        throw err;
+      }
+    });
+
+    archive.on('error', (err) => {
+      console.error('Archiver error:', err);
+      if (!res.headersSent) {
+        res.status(500).json({ error: 'Failed to create zip archive' });
+      }
+    });
+
+    archive.pipe(res);
+
+    // List of patterns to ignore (node_modules, build outputs, temporary files)
+    const ignoreList = [
+      'node_modules/**',
+      '**/node_modules/**',
+      'dist/**',
+      '**/dist/**',
+      '.git/**',
+      '**/.git/**',
+      '.cache/**',
+      '**/.cache/**',
+      '*.zip',
+      '**/*.zip'
+    ];
+
+    // Stream all files
+    archive.glob('**/*', {
+      cwd: rootDir,
+      ignore: ignoreList,
+      dot: true
+    });
+
+    await archive.finalize();
+  } catch (err) {
+    console.error('Failed to export project zip:', err);
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Failed to export project zip' });
+    }
   }
 });
 

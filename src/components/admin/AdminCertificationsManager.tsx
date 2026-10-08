@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Plus, Edit2, Trash2, Award, X } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Plus, Edit2, Trash2, Award, X, Upload, Image as ImageIcon, FileText, ExternalLink } from 'lucide-react';
 import type { Certification } from '../../types.js';
 import { api } from '../../api.js';
 
@@ -30,6 +30,38 @@ export const AdminCertificationsManager: React.FC<AdminCertificationsManagerProp
     visible: true
   });
   const [loading, setLoading] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadingPdf, setUploadingPdf] = useState(false);
+  const imgInputRef = useRef<HTMLInputElement>(null);
+  const pdfInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingImage(true);
+    try {
+      const res = await api.uploadFile(file);
+      setFormData((prev) => ({ ...prev, certificateImage: res.url }));
+    } catch (err: any) {
+      alert('Upload failed: ' + err.message);
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const handlePdfUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingPdf(true);
+    try {
+      const res = await api.uploadFile(file);
+      setFormData((prev) => ({ ...prev, certificatePdf: res.url }));
+    } catch (err: any) {
+      alert('PDF upload failed: ' + err.message);
+    } finally {
+      setUploadingPdf(false);
+    }
+  };
 
   const handleOpenCreate = () => {
     setEditingCert(null);
@@ -221,6 +253,66 @@ export const AdminCertificationsManager: React.FC<AdminCertificationsManagerProp
                   placeholder="https://..."
                   className="w-full px-3.5 py-2 rounded-lg bg-[#0c0e12] border border-[#232938] text-white text-xs focus:outline-none focus:border-amber-500/60"
                 />
+              </div>
+
+              {/* Certificate Image or Badge Upload */}
+              <div>
+                <label className="block text-xs font-medium text-[#9ca3af] mb-1">Certificate Image / Badge</label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={formData.certificateImage || ''}
+                    onChange={(e) => setFormData({ ...formData, certificateImage: e.target.value })}
+                    placeholder="/uploads/... or image URL"
+                    className="flex-1 px-3.5 py-2 rounded-lg bg-[#0c0e12] border border-[#232938] text-white text-xs focus:outline-none focus:border-amber-500/60 font-mono"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => imgInputRef.current?.click()}
+                    disabled={uploadingImage}
+                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-[#181e2b] border border-[#293448] text-white hover:border-[#3b475e] shrink-0"
+                  >
+                    <Upload className="w-3.5 h-3.5" />
+                    <span>{uploadingImage ? 'Uploading...' : 'Upload Image'}</span>
+                  </button>
+                  <input
+                    ref={imgInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                  />
+                </div>
+              </div>
+
+              {/* Certificate PDF Document Upload */}
+              <div>
+                <label className="block text-xs font-medium text-[#9ca3af] mb-1">Certificate PDF Document</label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={formData.certificatePdf || ''}
+                    onChange={(e) => setFormData({ ...formData, certificatePdf: e.target.value })}
+                    placeholder="/uploads/... or PDF URL"
+                    className="flex-1 px-3.5 py-2 rounded-lg bg-[#0c0e12] border border-[#232938] text-white text-xs focus:outline-none focus:border-amber-500/60 font-mono"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => pdfInputRef.current?.click()}
+                    disabled={uploadingPdf}
+                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-[#181e2b] border border-[#293448] text-white hover:border-[#3b475e] shrink-0"
+                  >
+                    <FileText className="w-3.5 h-3.5" />
+                    <span>{uploadingPdf ? 'Uploading...' : 'Upload PDF'}</span>
+                  </button>
+                  <input
+                    ref={pdfInputRef}
+                    type="file"
+                    accept=".pdf"
+                    onChange={handlePdfUpload}
+                    className="hidden"
+                  />
+                </div>
               </div>
 
               <div>

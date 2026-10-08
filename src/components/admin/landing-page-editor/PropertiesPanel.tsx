@@ -232,7 +232,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
           selectedElement.name?.toLowerCase().includes('hero'))
       ) {
         const updated = await api.updateSettings({ heroImage: res.url }).catch(() => null);
-        const persistentUrl = updated?.heroImage || '/images/hero/farhan-hero.png';
+        const persistentUrl = updated?.heroImage || res.url;
         updateRootProp({ imageUrl: persistentUrl });
       } else {
         updateRootProp({ imageUrl: res.url });

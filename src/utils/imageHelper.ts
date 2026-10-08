@@ -48,18 +48,19 @@ export function getOptimizedImageUrl(rawUrl?: string | null): string {
     return trimmed;
   }
 
-  // Any legacy or upload variation pointing to Farhan's hero portrait image
-  if (
-    trimmed.includes('farhan_hero_portrait') ||
-    trimmed.includes('60608_1789489485375') ||
-    trimmed.includes('46871_1789384437433')
-  ) {
-    return DEFAULT_HERO_PORTRAIT;
-  }
-
   // Uploaded files must be preserved with root-relative path
   if (trimmed.startsWith('/uploads/') || trimmed.startsWith('uploads/')) {
     return trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+  }
+
+  // Static images must be preserved with root-relative path
+  if (trimmed.startsWith('/images/') || trimmed.startsWith('images/')) {
+    return trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+  }
+
+  // Map legacy /src/assets/images paths to /images
+  if (trimmed.startsWith('/src/assets/images/')) {
+    return trimmed.replace('/src/assets/images/', '/images/');
   }
 
   // Ensure leading slash

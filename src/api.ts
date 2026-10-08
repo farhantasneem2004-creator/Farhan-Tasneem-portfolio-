@@ -693,5 +693,10 @@ export const api = {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Failed to reset landing page');
     return data.layout;
+  },
+
+  downloadProjectZip() {
+    const token = localStorage.getItem('auth_token') || '';
+    window.location.href = `/api/admin/export-project-zip?token=${encodeURIComponent(token)}`;
   }
 };

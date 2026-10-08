@@ -2,18 +2,27 @@ import React, { useState } from 'react';
 import { ArrowUpRight, Github, ExternalLink } from 'lucide-react';
 import type { Project } from '../../types.js';
 import { ProjectModal } from './ProjectModal.js';
+import { ScrollReveal } from '../common/ScrollReveal.js';
+import { Interactive3DCard } from '../common/Interactive3DCard.js';
 
 interface ProjectsSectionProps {
   projects?: Project[];
   onSelectProject?: (project: Project) => void;
   accentColor?: string;
+  glowColor?: string;
+  lightingIntensity?: number;
+  enable3D?: boolean;
 }
 
 export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
   projects = [],
   onSelectProject,
-  accentColor = '#e5a93c'
+  accentColor = '#e5a93c',
+  glowColor,
+  lightingIntensity = 1,
+  enable3D = true
 }) => {
+  const activeGlow = glowColor || accentColor;
   const visibleProjects = (projects || []).filter((p) => p && p.visible);
   const [internalSelectedProject, setInternalSelectedProject] = useState<Project | null>(null);
 
@@ -36,165 +45,179 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
       <div className="max-w-7xl mx-auto px-5 sm:px-8">
         
         {/* Section Header */}
-        <div className="max-w-3xl mb-12 sm:mb-14">
-          <div className="inline-flex items-center gap-2 mb-3">
-            <span className="w-6 h-[2px]" style={{ backgroundColor: accentColor }} />
-            <span className="text-xs uppercase tracking-[0.2em] font-semibold text-[#9ca3af]">
-              Selected Works
-            </span>
+        <ScrollReveal delay={50}>
+          <div className="max-w-3xl mb-12 sm:mb-14">
+            <div className="inline-flex items-center gap-2 mb-3">
+              <span className="w-6 h-[2px]" style={{ backgroundColor: accentColor }} />
+              <span className="text-xs uppercase tracking-[0.2em] font-semibold text-[#9ca3af]">
+                Selected Works
+              </span>
+            </div>
+            <h2 className="font-display font-bold text-2xl xs:text-3xl sm:text-4xl text-white tracking-tight leading-tight mb-4 break-words">
+              Featured Engineering Case Studies
+            </h2>
+            <p className="text-sm sm:text-base text-[#9ca3af] leading-relaxed">
+              Real-world web software systems and applications built with an emphasis on reliable architecture, clean user interfaces, and domain complexity.
+            </p>
           </div>
-          <h2 className="font-display font-bold text-2xl xs:text-3xl sm:text-4xl text-white tracking-tight leading-tight mb-4 break-words">
-            Featured Engineering Case Studies
-          </h2>
-          <p className="text-sm sm:text-base text-[#9ca3af] leading-relaxed">
-            Real-world web software systems and applications built with an emphasis on reliable architecture, clean user interfaces, and domain complexity.
-          </p>
-        </div>
+        </ScrollReveal>
 
         {/* Featured Projects: Large Editorial Presentation */}
-        {featuredProjects.map((project) => (
-          <div
-            key={project.id}
-            onClick={() => handleSelect(project)}
-            className="mb-10 sm:mb-12 rounded-2xl bg-[#11141c] border border-[#1f2533] hover:border-[#2f384c] transition-all duration-300 overflow-hidden group cursor-pointer shadow-xl hover:shadow-2xl"
-          >
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-0">
-              
-              {/* Image Column */}
-              <div className="lg:col-span-7 relative overflow-hidden bg-[#0a0c10] aspect-[16/10] lg:aspect-auto min-h-[220px] sm:min-h-[280px] lg:min-h-[400px]">
-                <img
-                  src={project.mainImage || '/src/assets/images/efuture_cup_project_1789381795595.jpg'}
-                  alt={project.name}
-                  referrerPolicy="no-referrer"
-                  className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#11141c] via-transparent to-transparent lg:hidden" />
+        {featuredProjects.map((project, index) => (
+          <ScrollReveal key={project.id} delay={100 * (index + 1)}>
+            <Interactive3DCard
+              glowColor={activeGlow}
+              intensity={lightingIntensity}
+              disabled={!enable3D}
+              onClick={() => handleSelect(project)}
+              className="mb-10 sm:mb-12 rounded-2xl bg-[#11141c] border border-[#1f2533] hover:border-[#2f384c] overflow-hidden group cursor-pointer shadow-xl"
+            >
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-0">
                 
-                <div className="absolute top-4 left-4 z-10">
-                  <span
-                    className="px-3 py-1 rounded-full text-xs font-semibold text-[#0c0e12]"
-                    style={{ backgroundColor: accentColor }}
-                  >
-                    Featured System
-                  </span>
-                </div>
-              </div>
-
-              {/* Information Column */}
-              <div className="lg:col-span-5 p-5 sm:p-8 lg:p-10 flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center justify-between gap-2 mb-3">
-                    <span className="text-xs uppercase tracking-wider font-semibold text-[#9ca3af]">
-                      {project.category}
+                {/* Image Column */}
+                <div className="lg:col-span-7 relative overflow-hidden bg-[#0a0c10] aspect-[16/10] lg:aspect-auto min-h-[220px] sm:min-h-[280px] lg:min-h-[400px]">
+                  <img
+                    src={project.mainImage || '/images/efuture_cup_project_1789381795595.jpg'}
+                    alt={project.name}
+                    referrerPolicy="no-referrer"
+                    className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
+                  />
+                  {/* Subtle lighting gleam on hover */}
+                  <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.02] to-white/[0.06] opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#11141c] via-transparent to-transparent lg:hidden" />
+                  
+                  <div className="absolute top-4 left-4 z-10">
+                    <span
+                      className="px-3 py-1 rounded-full text-xs font-semibold text-[#0c0e12] shadow-md"
+                      style={{ backgroundColor: accentColor }}
+                    >
+                      Featured System
                     </span>
-                    <span className="text-xs text-[#6b7280] font-mono">{project.date}</span>
                   </div>
+                </div>
 
-                  <h3 className="font-display font-bold text-xl sm:text-2xl lg:text-3xl text-white group-hover:text-amber-300 transition-colors mb-3 sm:mb-4 flex items-start justify-between gap-3">
-                    <span>{project.name}</span>
-                    <ArrowUpRight className="w-5 h-5 shrink-0 text-[#6b7280] group-hover:text-white group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
-                  </h3>
-
-                  <p className="text-sm sm:text-base text-[#94a3b8] leading-relaxed mb-6">
-                    {project.shortDescription}
-                  </p>
-
-                  {/* Technology Tags */}
-                  <div className="flex flex-wrap gap-2 mb-8">
-                    {(project.technologies || []).map((tech, i) => (
-                      <span
-                        key={i}
-                        className="px-2.5 py-1 rounded-md text-xs font-mono bg-[#161b25] text-[#cbd5e1] border border-[#252d3e]"
-                      >
-                        {tech}
+                {/* Information Column */}
+                <div className="lg:col-span-5 p-5 sm:p-8 lg:p-10 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between gap-2 mb-3">
+                      <span className="text-xs uppercase tracking-wider font-semibold text-[#9ca3af]">
+                        {project.category}
                       </span>
-                    ))}
+                      <span className="text-xs text-[#6b7280] font-mono">{project.date}</span>
+                    </div>
+
+                    <h3 className="font-display font-bold text-xl sm:text-2xl lg:text-3xl text-white group-hover:text-amber-300 transition-colors mb-3 sm:mb-4 flex items-start justify-between gap-3">
+                      <span>{project.name}</span>
+                      <ArrowUpRight className="w-5 h-5 shrink-0 text-[#6b7280] group-hover:text-white group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
+                    </h3>
+
+                    <p className="text-sm sm:text-base text-[#94a3b8] leading-relaxed mb-6">
+                      {project.shortDescription}
+                    </p>
+
+                    {/* Technology Tags */}
+                    <div className="flex flex-wrap gap-2 mb-8">
+                      {(project.technologies || []).map((tech, i) => (
+                        <span
+                          key={i}
+                          className="px-2.5 py-1 rounded-md text-xs font-mono bg-[#161b25] text-[#cbd5e1] border border-[#252d3e] hover:border-[#3b4760] transition-colors"
+                        >
+                          {tech}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Footer Actions */}
+                  <div className="flex items-center gap-4 pt-4 border-t border-[#1d2331]" onClick={(e) => e.stopPropagation()}>
+                    <button
+                      onClick={() => handleSelect(project)}
+                      className="btn-interactive text-xs font-semibold text-[#e5e7eb] hover:text-white flex items-center gap-1.5 cursor-pointer py-1"
+                    >
+                      <span>Read Case Study</span>
+                      <ArrowUpRight className="w-3.5 h-3.5 text-amber-400" style={{ color: accentColor }} />
+                    </button>
+
+                    {project.liveDemoUrl && (
+                      <a
+                        href={project.liveDemoUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn-interactive text-xs text-[#9ca3af] hover:text-white flex items-center gap-1.5 transition-colors ml-auto py-1"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                        <span>Live Demo</span>
+                      </a>
+                    )}
+
+                    {project.githubUrl && (
+                      <a
+                        href={project.githubUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn-interactive text-xs text-[#9ca3af] hover:text-white flex items-center gap-1.5 transition-colors py-1"
+                      >
+                        <Github className="w-3.5 h-3.5" />
+                        <span>Code</span>
+                      </a>
+                    )}
                   </div>
                 </div>
 
-                {/* Footer Actions */}
-                <div className="flex items-center gap-4 pt-4 border-t border-[#1d2331]" onClick={(e) => e.stopPropagation()}>
-                  <button
-                    onClick={() => handleSelect(project)}
-                    className="text-xs font-semibold text-[#e5e7eb] hover:text-white flex items-center gap-1.5 cursor-pointer"
-                  >
-                    <span>Read Case Study</span>
-                    <ArrowUpRight className="w-3.5 h-3.5 text-amber-400" style={{ color: accentColor }} />
-                  </button>
-
-                  {project.liveDemoUrl && (
-                    <a
-                      href={project.liveDemoUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs text-[#9ca3af] hover:text-white flex items-center gap-1.5 transition-colors ml-auto"
-                    >
-                      <ExternalLink className="w-3.5 h-3.5" />
-                      <span>Live Demo</span>
-                    </a>
-                  )}
-
-                  {project.githubUrl && (
-                    <a
-                      href={project.githubUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs text-[#9ca3af] hover:text-white flex items-center gap-1.5 transition-colors"
-                    >
-                      <Github className="w-3.5 h-3.5" />
-                      <span>Code</span>
-                    </a>
-                  )}
-                </div>
               </div>
-
-            </div>
-          </div>
+            </Interactive3DCard>
+          </ScrollReveal>
         ))}
 
         {/* Regular Projects Grid (if any) */}
         {regularProjects.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {regularProjects.map((proj) => (
-              <div
-                key={proj.id}
-                onClick={() => handleSelect(proj)}
-                className="rounded-xl bg-[#11141c] border border-[#1f2533] hover:border-[#2f384c] overflow-hidden group cursor-pointer transition-all duration-300 flex flex-col justify-between p-6"
-              >
-                <div>
-                  <div className="relative rounded-lg overflow-hidden aspect-video mb-5 bg-[#0a0c10] border border-[#1b202c]">
-                    <img
-                      src={proj.mainImage || '/src/assets/images/efuture_cup_project_1789381795595.jpg'}
-                      alt={proj.name}
-                      referrerPolicy="no-referrer"
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
+          <ScrollReveal delay={200}>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {regularProjects.map((proj) => (
+                <Interactive3DCard
+                  key={proj.id}
+                  glowColor={activeGlow}
+                  intensity={lightingIntensity}
+                  disabled={!enable3D}
+                  onClick={() => handleSelect(proj)}
+                  className="rounded-xl bg-[#11141c] border border-[#1f2533] hover:border-[#2f384c] overflow-hidden group cursor-pointer flex flex-col justify-between p-6"
+                >
+                  <div>
+                    <div className="relative rounded-lg overflow-hidden aspect-video mb-5 bg-[#0a0c10] border border-[#1b202c]">
+                      <img
+                        src={proj.mainImage || '/images/efuture_cup_project_1789381795595.jpg'}
+                        alt={proj.name}
+                        referrerPolicy="no-referrer"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.02] to-white/[0.05] opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                    </div>
+                    <div className="flex items-center justify-between text-xs text-[#9ca3af] mb-2">
+                      <span>{proj.category}</span>
+                      <span className="font-mono">{proj.date}</span>
+                    </div>
+                    <h4 className="font-display font-bold text-lg text-white group-hover:text-amber-300 transition-colors mb-2">
+                      {proj.name}
+                    </h4>
+                    <p className="text-xs sm:text-sm text-[#94a3b8] leading-relaxed mb-4 line-clamp-3">
+                      {proj.shortDescription}
+                    </p>
                   </div>
-                  <div className="flex items-center justify-between text-xs text-[#9ca3af] mb-2">
-                    <span>{proj.category}</span>
-                    <span className="font-mono">{proj.date}</span>
-                  </div>
-                  <h4 className="font-display font-bold text-lg text-white group-hover:text-amber-300 transition-colors mb-2">
-                    {proj.name}
-                  </h4>
-                  <p className="text-xs sm:text-sm text-[#94a3b8] leading-relaxed mb-4 line-clamp-3">
-                    {proj.shortDescription}
-                  </p>
-                </div>
 
-                <div className="pt-4 border-t border-[#1c2230] flex items-center justify-between">
-                  <div className="flex flex-wrap gap-1.5">
-                    {(proj.technologies || []).slice(0, 3).map((t, idx) => (
-                      <span key={idx} className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#161b25] text-[#9ca3af]">
-                        {t}
-                      </span>
-                    ))}
+                  <div className="pt-4 border-t border-[#1c2230] flex items-center justify-between">
+                    <div className="flex flex-wrap gap-1.5">
+                      {(proj.technologies || []).slice(0, 3).map((t, idx) => (
+                        <span key={idx} className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#161b25] text-[#9ca3af]">
+                          {t}
+                        </span>
+                      ))}
+                    </div>
+                    <ArrowUpRight className="w-4 h-4 text-[#6b7280] group-hover:text-white group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
                   </div>
-                  <ArrowUpRight className="w-4 h-4 text-[#6b7280] group-hover:text-white group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
-                </div>
-              </div>
-            ))}
-          </div>
+                </Interactive3DCard>
+              ))}
+            </div>
+          </ScrollReveal>
         )}
 
       </div>

@@ -4,6 +4,7 @@ import type { SiteSettings, SocialLink, LandingPageLayout } from '../../types.js
 import { DynamicIcon } from '../common/IconHelper.js';
 import { DynamicLandingPageHero } from './DynamicLandingPageHero.js';
 import { getOptimizedImageUrl, DEFAULT_HERO_PORTRAIT } from '../../utils/imageHelper.js';
+import { Hero3DPortrait } from './Hero3DPortrait.js';
 
 interface HeroProps {
   settings: SiteSettings;
@@ -63,9 +64,29 @@ export const Hero: React.FC<HeroProps> = ({
       id="home"
       className="relative min-h-[calc(100vh-5rem)] flex items-center pt-28 pb-16 sm:pt-32 sm:pb-20 lg:pt-28 lg:pb-20 overflow-x-clip"
     >
+      {/* Atmospheric Depth: Ultra-sparse, subtle slow-floating ambient particles */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden z-[2]">
+        <div
+          className="atmospheric-particle absolute w-1.5 h-1.5 rounded-full blur-[0.5px]"
+          style={{ top: '22%', left: '18%', backgroundColor: accent, opacity: 0.35, animationDelay: '0s' }}
+        />
+        <div
+          className="atmospheric-particle absolute w-1 h-1 rounded-full blur-[0.5px]"
+          style={{ top: '65%', left: '28%', backgroundColor: '#94a3b8', opacity: 0.25, animationDelay: '3s' }}
+        />
+        <div
+          className="atmospheric-particle absolute w-2 h-2 rounded-full blur-[1px]"
+          style={{ top: '35%', right: '22%', backgroundColor: accent, opacity: 0.2, animationDelay: '6s' }}
+        />
+        <div
+          className="atmospheric-particle absolute w-1 h-1 rounded-full blur-[0.5px]"
+          style={{ top: '78%', right: '35%', backgroundColor: '#cbd5e1', opacity: 0.3, animationDelay: '2s' }}
+        />
+      </div>
+
       {/* Subtle ambient lighting / radial backgrounds that do not cause layout shifts */}
       <div
-        className="absolute top-1/4 left-1/3 -translate-x-1/2 -translate-y-1/2 w-[350px] sm:w-[500px] h-[350px] sm:h-[500px] rounded-full pointer-events-none blur-[120px] sm:blur-[140px] opacity-[0.08]"
+        className="absolute top-1/4 left-1/3 -translate-x-1/2 -translate-y-1/2 w-[350px] sm:w-[500px] h-[350px] sm:h-[500px] rounded-full pointer-events-none blur-[120px] sm:blur-[140px] opacity-[0.09]"
         style={{ backgroundColor: accent }}
       />
       <div className="absolute top-1/3 right-10 w-[260px] sm:w-[380px] h-[260px] sm:h-[380px] rounded-full pointer-events-none blur-[140px] opacity-[0.04] bg-white" />
@@ -73,7 +94,7 @@ export const Hero: React.FC<HeroProps> = ({
       {/* Faint background architectural grid */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#161922_1px,transparent_1px),linear-gradient(to_bottom,#161922_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_70%_60%_at_50%_45%,#000_65%,transparent_100%)] opacity-20 pointer-events-none" />
 
-      <div className="relative max-w-7xl mx-auto px-5 sm:px-8 w-full">
+      <div className="relative max-w-7xl mx-auto px-5 sm:px-8 w-full z-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-10 lg:gap-12 xl:gap-16 items-center">
           
           {/* ========================================================= */}
@@ -136,12 +157,22 @@ export const Hero: React.FC<HeroProps> = ({
               </span>
             </div>
 
-            {/* Fluid Name Headline - Scaled proportionally so it never clips on mobile or PC */}
-            <h1 className="font-display font-extrabold tracking-tight leading-[1.05] text-4xl xs:text-5xl sm:text-6xl lg:text-5xl xl:text-6xl 2xl:text-7xl mb-4 sm:mb-5 text-white break-words">
-              <span className="block">{settings?.heroHeadingFirst || 'Farhan'}</span>
+            {/* Fluid Name Headline - Enhanced with subtle dimensional depth and specular sheen */}
+            <h1 className="font-display font-extrabold tracking-tight leading-[1.05] text-4xl xs:text-5xl sm:text-6xl lg:text-5xl xl:text-6xl 2xl:text-7xl mb-4 sm:mb-5 text-white break-words select-none">
               <span
-                className="block transition-colors"
-                style={{ color: accent }}
+                className="block transition-transform duration-300 hover:translate-x-0.5"
+                style={{
+                  textShadow: '0 2px 10px rgba(0, 0, 0, 0.7), 0 8px 24px rgba(0, 0, 0, 0.5)'
+                }}
+              >
+                {settings?.heroHeadingFirst || 'Farhan'}
+              </span>
+              <span
+                className="block transition-all duration-300 hover:translate-x-0.5"
+                style={{
+                  color: accent,
+                  textShadow: `0 2px 12px rgba(0, 0, 0, 0.8), 0 0 24px ${accent}35`
+                }}
               >
                 {settings?.heroHeadingAccent || 'Tasneem'}
               </span>
@@ -177,7 +208,7 @@ export const Hero: React.FC<HeroProps> = ({
               <button
                 id="hero-view-work-btn"
                 onClick={onViewWork}
-                className="inline-flex items-center justify-center gap-2.5 px-6 py-3 rounded-lg text-sm font-semibold text-[#0c0e12] transition-all transform active:scale-95 shadow-md hover:brightness-105 cursor-pointer"
+                className="btn-interactive inline-flex items-center justify-center gap-2.5 px-6 py-3 rounded-lg text-sm font-semibold text-[#0c0e12] shadow-md hover:brightness-105 cursor-pointer"
                 style={{ backgroundColor: accent }}
               >
                 <span>View My Work</span>
@@ -188,7 +219,7 @@ export const Hero: React.FC<HeroProps> = ({
                 <button
                   id="hero-download-cv-btn"
                   onClick={handleDownload}
-                  className="inline-flex items-center justify-center gap-2.5 px-6 py-3 rounded-lg text-sm font-semibold text-[#f3f4f6] bg-[#12151b] border border-[#2e3544] hover:border-[#4b5563] hover:text-white transition-all active:scale-95 cursor-pointer"
+                  className="btn-interactive inline-flex items-center justify-center gap-2.5 px-6 py-3 rounded-lg text-sm font-semibold text-[#f3f4f6] bg-[#12151b] border border-[#2e3544] hover:border-[#4b5563] hover:text-white cursor-pointer"
                 >
                   <Download className="w-4 h-4 text-[#9ca3af]" />
                   <span>Download CV</span>
@@ -211,7 +242,7 @@ export const Hero: React.FC<HeroProps> = ({
                     rel="noopener noreferrer"
                     aria-label={link.label}
                     title={link.label}
-                    className="p-2.5 rounded-lg text-[#9ca3af] hover:text-white border border-[#1f2533] hover:border-[#374151] hover:bg-[#181c24] transition-all"
+                    className="p-2.5 rounded-lg text-[#9ca3af] hover:text-white border border-[#1f2533] hover:border-[#374151] hover:bg-[#181c24] transition-all hover:-translate-y-0.5"
                   >
                     <DynamicIcon name={link.platform} className="w-4 h-4" />
                   </a>
@@ -222,59 +253,16 @@ export const Hero: React.FC<HeroProps> = ({
 
           {/* ========================================================= */}
           {/* DESKTOP PROFILE SHOT (Visible only on lg+ screens)        */}
-          {/* Framed safely with strict bounds to never crowd the text  */}
+          {/* Layered 3D portrait with subtle perspective, lighting,    */}
+          {/* interactive gold frame and specular depth                 */}
           {/* ========================================================= */}
           <div className="hidden lg:flex lg:col-span-5 xl:col-span-5 relative items-center justify-center">
-            <div className="relative w-full max-w-[320px] xl:max-w-[360px] 2xl:max-w-[380px]">
-              
-              {/* Decorative accent geometry that stays safely INSIDE bounds */}
-              {settings?.heroBgElement && (
-                <>
-                  <div
-                    className="absolute -top-3 -right-3 w-16 h-16 border-t-2 border-r-2 pointer-events-none transition-all rounded-tr-lg"
-                    style={{ borderColor: accent }}
-                  />
-                  <div className="absolute -bottom-3 -left-3 w-16 h-16 border-b-2 border-l-2 border-[#2e3544] pointer-events-none rounded-bl-lg" />
-                </>
-              )}
-
-              {/* Main Portrait Card */}
-              <div className="relative w-full aspect-[4/5] rounded-2xl overflow-hidden border border-[#222732] bg-[#12151b] shadow-2xl shadow-black/80 group">
-                <img
-                  id="hero-portrait-image"
-                  src={currentImage}
-                  alt="Farhan Tasneem - Computer Science & Engineering Student"
-                  onError={handleImageError}
-                  referrerPolicy="no-referrer"
-                  className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
-                  style={{
-                    objectPosition: settings?.heroImagePosition || 'center top'
-                  }}
-                />
-
-                {/* Bottom dark blend overlay */}
-                <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-[#0c0e12] via-[#0c0e12]/60 to-transparent pointer-events-none" />
-
-                {/* Floating identity pill safely pinned inside the bottom of the card */}
-                <div className="absolute bottom-3.5 inset-x-3.5 p-3 rounded-xl bg-[#0c0e12]/85 backdrop-blur-md border border-[#222732] flex items-center justify-between gap-2 shadow-lg">
-                  <div>
-                    <span className="font-semibold text-xs text-white block truncate">
-                      Farhan Tasneem
-                    </span>
-                    <span className="text-[11px] text-[#9ca3af] block truncate">
-                      Daffodil Int. University
-                    </span>
-                  </div>
-                  <div
-                    className="shrink-0 p-1.5 rounded-lg text-xs"
-                    style={{ backgroundColor: `${accent}20`, color: accent }}
-                  >
-                    <GraduationCap className="w-4 h-4" />
-                  </div>
-                </div>
-              </div>
-
-            </div>
+            <Hero3DPortrait
+              currentImage={currentImage}
+              settings={settings}
+              accentColor={accent}
+              onImageError={handleImageError}
+            />
           </div>
 
         </div>
